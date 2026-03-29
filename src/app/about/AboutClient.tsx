@@ -61,8 +61,8 @@ const ImageBox = ({
       <div className="absolute inset-0 bg-gradient-to-t from-[#002D72]/90 via-[#002D72]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     )}
     {title && (
-      <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-        <h4 className="text-white font-black uppercase tracking-tight text-lg italic">{title}</h4>
+      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+        <h4 className="text-white font-black uppercase tracking-tight text-base md:text-lg italic">{title}</h4>
       </div>
     )}
   </motion.div>
@@ -140,7 +140,7 @@ export default function AboutClient() {
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <Navbar onCartOpen={() => setCartOpen(true)} />
 
-      <main className="bg-white min-h-screen pt-48 px-8 font-genos relative z-10 flex-grow mb-[75vh]">
+      <main className="bg-white min-h-screen pt-32 md:pt-48 px-4 md:px-8 font-genos relative z-10 flex-grow mb-[75vh]">
         <div className="max-w-[1400px] mx-auto">
           
           {/* Hero Section */}
@@ -148,23 +148,23 @@ export default function AboutClient() {
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-[#00A651] font-black uppercase tracking-[0.4em] text-sm"
+              className="text-[#00A651] font-black uppercase tracking-[0.4em] text-xs md:text-sm"
             >
               {cms['about.hero.tag'] || "Our Story"}
             </motion.span>
 
-            <div className="grid grid-cols-12 gap-12 mt-8">
-              <div className="col-span-12 lg:col-span-7">
-                <h1 className="text-7xl md:text-9xl font-black text-[#002D72] leading-[0.8] uppercase tracking-tighter">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mt-6 md:mt-8">
+              <div className="col-span-1 md:col-span-12 lg:col-span-7">
+                <h1 className="text-5xl md:text-7xl lg:text-9xl font-black text-[#002D72] leading-[0.8] uppercase tracking-tighter">
                   {(cms['about.hero.title'] || "Guarding the Pulse of the World.").split(' ').map((word, i, arr) => {
                     if (word.toLowerCase() === 'pulse') return <span key={i}><span className="text-[#00A651] italic">{word}</span>{' '}</span>;
-                    if (i === Math.floor(arr.length / 2)) return <span key={i}><br />{word}{' '}</span>;
+                    if (i === Math.floor(arr.length / 2)) return <span key={i}><br className="hidden md:block" />{word}{' '}</span>;
                     return <span key={i}>{word}{' '}</span>;
                   })}
                 </h1>
               </div>
-              <div className="col-span-12 lg:col-span-5 flex flex-col justify-center">
-                <p className="text-2xl text-slate-500 font-medium leading-relaxed">
+              <div className="col-span-1 md:col-span-12 lg:col-span-5 flex flex-col justify-center">
+                <p className="text-lg md:text-2xl text-slate-500 font-medium leading-relaxed">
                   {cms['about.hero.description'] || "Every upload, every download, and every digital connection runs through the copper and fibre cables that TPI technicians install and maintain. We are the backbone of the digital age."}
                 </p>
               </div>
@@ -172,36 +172,36 @@ export default function AboutClient() {
           </AnimatedSection>
 
           {/* Image Gallery Section */}
-          <AnimatedSection className="py-24">
-            <div className="grid grid-cols-12 gap-6">
+          <AnimatedSection className="py-12 md:py-24">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
               {/* Large featured image */}
-              <div className="col-span-12 md:col-span-8">
+              <div className="col-span-1 md:col-span-12 lg:col-span-8">
                 <ImageBox 
                   src={galleryImages[0].src}
                   alt={galleryImages[0].alt}
                   title={galleryImages[0].title}
-                  aspectRatio="aspect-[16/10]"
+                  aspectRatio="aspect-[4/3] md:aspect-[16/10]"
                 />
               </div>
               {/* Stacked smaller images */}
-              <div className="col-span-12 md:col-span-4 grid grid-rows-2 gap-6">
+              <div className="col-span-1 md:col-span-12 lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 lg:grid-rows-2 gap-4 md:gap-6">
                 <ImageBox 
                   src={galleryImages[1].src}
                   alt={galleryImages[1].alt}
                   title={galleryImages[1].title}
-                  aspectRatio="aspect-[4/3]"
+                  aspectRatio="aspect-square lg:aspect-[4/3]"
                 />
                 <ImageBox 
                   src={galleryImages[2].src}
                   alt={galleryImages[2].alt}
                   title={galleryImages[2].title}
-                  aspectRatio="aspect-[4/3]"
+                  aspectRatio="aspect-square lg:aspect-[4/3]"
                 />
               </div>
             </div>
             {/* Second row - asymmetric */}
-            <div className="grid grid-cols-12 gap-6 mt-6">
-              <div className="col-span-12 md:col-span-5">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 mt-4 md:mt-6">
+              <div className="col-span-1 md:col-span-12 lg:col-span-5">
                 <ImageBox 
                   src={galleryImages[3].src}
                   alt={galleryImages[3].alt}
@@ -209,9 +209,9 @@ export default function AboutClient() {
                   aspectRatio="aspect-[4/3]"
                 />
               </div>
-              <div className="col-span-12 md:col-span-7 bg-[#002D72] rounded-[2rem] p-10 flex flex-col justify-center">
-                <p className="text-white/60 uppercase tracking-[0.3em] text-xs font-bold mb-4">Our mission</p>
-                <p className="text-white text-2xl md:text-3xl font-medium leading-relaxed italic">
+              <div className="col-span-1 md:col-span-12 lg:col-span-7 bg-[#002D72] rounded-[2rem] p-6 md:p-10 flex flex-col justify-center">
+                <p className="text-white/60 uppercase tracking-[0.3em] text-[10px] md:text-xs font-bold mb-4">Our mission</p>
+                <p className="text-white text-xl md:text-3xl font-medium leading-relaxed italic">
                   {cms['about.gallery.quote'] || "To train, equip, and launch the next generation of data cabling professionals into the UK workforce."}
                 </p>
               </div>
@@ -219,15 +219,15 @@ export default function AboutClient() {
           </AnimatedSection>
 
           {/* Narrative Section */}
-          <AnimatedSection className="py-32 grid grid-cols-12 gap-12 border-t border-slate-100">
-            <div className="col-span-12 md:col-span-6">
-              <h2 className="text-[#002D72] text-4xl font-black uppercase italic mb-8">
+          <AnimatedSection className="py-16 md:py-32 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 border-t border-slate-100">
+            <div className="col-span-1 md:col-span-12 lg:col-span-6">
+              <h2 className="text-[#002D72] text-3xl md:text-4xl font-black uppercase italic mb-6 md:mb-8">
                 {cms['about.narrative.title'] || "What is the data cabling industry?"}
               </h2>
-              <p className="text-xl text-slate-600 leading-relaxed mb-6">
+              <p className="text-lg md:text-xl text-slate-600 leading-relaxed mb-6">
                 {cms['about.narrative.para1'] || "Everything you do on the internet—that new Netflix show, that game download, that online booking—all runs through the physical infrastructure we build."}
               </p>
-              <p className="text-xl text-slate-600 leading-relaxed mb-8">
+              <p className="text-lg md:text-xl text-slate-600 leading-relaxed mb-8">
                 {cms['about.narrative.para2'] || "Data cabling engineers are the unsung architects of modern connectivity. TPI exists to train, equip, and launch the next generation of these essential professionals into the UK workforce."}
               </p>
               <Link href="/contact">
@@ -241,20 +241,20 @@ export default function AboutClient() {
                 </motion.button>
               </Link>
             </div>
-            <div className="col-span-12 md:col-span-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-[3rem] p-12 relative overflow-hidden">
+            <div className="col-span-1 md:col-span-12 lg:col-span-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#00A651]/10 rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#0072CE]/10 rounded-full blur-3xl" />
-              <p className="text-lg text-slate-600 italic leading-relaxed relative z-10">
+              <p className="text-base md:text-lg text-slate-600 italic leading-relaxed relative z-10">
                 &quot;{cms['about.narrative.quote'] || "TPI provides the practical and theoretical training to give you all the preparation you need to forge a career in the data cabling and data centre industry."}&quot;
               </p>
               <div className="mt-8 pt-8 border-t border-slate-200 relative z-10">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-[#002D72] rounded-full flex items-center justify-center text-white font-black text-xl">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-[#002D72] rounded-full flex items-center justify-center text-white font-black text-xl">
                     E
                   </div>
                   <div>
-                    <p className="text-[#002D72] font-black uppercase text-sm tracking-widest">{cms['about.narrative.quotee'] || "E. Osobu"}</p>
-                    <p className="text-slate-400 text-xs mt-1 uppercase tracking-widest">{cms['about.narrative.quotee_title'] || "Founder, The Physical Internet"}</p>
+                    <p className="text-[#002D72] font-black uppercase text-xs md:text-sm tracking-widest">{cms['about.narrative.quotee'] || "E. Osobu"}</p>
+                    <p className="text-slate-400 text-[10px] md:text-xs mt-1 uppercase tracking-widest">{cms['about.narrative.quotee_title'] || "Founder, The Physical Internet"}</p>
                   </div>
                 </div>
               </div>
@@ -262,8 +262,8 @@ export default function AboutClient() {
           </AnimatedSection>
 
           {/* Stats Section */}
-          <AnimatedSection className="py-20 border-t border-slate-100">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <AnimatedSection className="py-12 md:py-20 border-t border-slate-100">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
               {[
                 { number: cms['about.stat1.number'] || "500+", label: cms['about.stat1.label'] || "Graduates trained" },
                 { number: cms['about.stat2.number'] || "98%", label: cms['about.stat2.label'] || "Employment rate" },
@@ -278,18 +278,18 @@ export default function AboutClient() {
                   viewport={{ once: true }}
                   className="text-center"
                 >
-                  <p className="text-5xl md:text-6xl font-black text-[#002D72] tracking-tighter">{stat.number}</p>
-                  <p className="text-slate-500 uppercase tracking-widest text-xs mt-2 font-bold">{stat.label}</p>
+                  <p className="text-4xl md:text-5xl lg:text-6xl font-black text-[#002D72] tracking-tighter">{stat.number}</p>
+                  <p className="text-slate-500 uppercase tracking-widest text-[10px] md:text-xs mt-2 font-bold">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
           </AnimatedSection>
 
           {/* Mission pillars */}
-          <AnimatedSection className="py-32 border-t border-slate-100">
-            <span className="text-[#00A651] font-black uppercase tracking-[0.4em] text-sm">{cms['about.pillars.tag'] || "What drives us"}</span>
-            <h2 className="text-[#002D72] text-5xl font-black uppercase italic mt-4 mb-16">{cms['about.pillars.title'] || "Our mission pillars"}</h2>
-            <div className="grid grid-cols-12 gap-8">
+          <AnimatedSection className="py-16 md:py-32 border-t border-slate-100">
+            <span className="text-[#00A651] font-black uppercase tracking-[0.4em] text-xs md:text-sm">{cms['about.pillars.tag'] || "What drives us"}</span>
+            <h2 className="text-[#002D72] text-4xl md:text-5xl font-black uppercase italic mt-2 md:mt-4 mb-8 md:mb-16">{cms['about.pillars.title'] || "Our mission pillars"}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
               {pillars.map((pillar, index) => (
                 <motion.div 
                   key={pillar.title} 
@@ -298,30 +298,30 @@ export default function AboutClient() {
                   transition={{ delay: index * 0.15 }}
                   viewport={{ once: true }}
                   whileHover={{ y: -8 }}
-                  className="col-span-12 md:col-span-4 bg-white border border-slate-100 rounded-[2.5rem] p-12 shadow-sm hover:shadow-2xl transition-all duration-500 group"
+                  className="col-span-1 md:col-span-12 lg:col-span-4 bg-white border border-slate-100 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 shadow-sm hover:shadow-2xl transition-all duration-500 group"
                 >
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-2 h-16 rounded-full transition-all duration-300 group-hover:h-20" style={{ backgroundColor: pillar.color }} />
-                    <span className="text-4xl">{pillar.icon}</span>
+                  <div className="flex items-center gap-4 mb-6 md:mb-8">
+                    <div className="w-2 h-12 md:h-16 rounded-full transition-all duration-300 group-hover:h-16 md:group-hover:h-20" style={{ backgroundColor: pillar.color }} />
+                    <span className="text-3xl md:text-4xl">{pillar.icon}</span>
                   </div>
-                  <h3 className="text-3xl font-black text-[#002D72] uppercase italic mb-4 group-hover:text-[#0072CE] transition-colors">{pillar.title}</h3>
-                  <p className="text-slate-500 text-lg leading-relaxed">{pillar.desc}</p>
+                  <h3 className="text-2xl md:text-3xl font-black text-[#002D72] uppercase italic mb-3 md:mb-4 group-hover:text-[#0072CE] transition-colors">{pillar.title}</h3>
+                  <p className="text-slate-500 text-base md:text-lg leading-relaxed">{pillar.desc}</p>
                 </motion.div>
               ))}
             </div>
           </AnimatedSection>
 
           {/* CTA Section */}
-          <AnimatedSection className="py-32 border-t border-slate-100">
-            <div className="bg-[#002D72] rounded-[4rem] p-16 md:p-24 text-center relative overflow-hidden">
+          <AnimatedSection className="py-16 md:py-32 border-t border-slate-100">
+            <div className="bg-[#002D72] rounded-[3rem] md:rounded-[4rem] p-8 md:p-16 lg:p-24 text-center relative overflow-hidden">
               <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#0072CE]/30 rounded-full blur-[128px]" />
               <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[#00A651]/20 rounded-full blur-[100px]" />
               <div className="relative z-10">
-                <h2 className="text-4xl md:text-6xl font-black text-white italic uppercase tracking-tighter mb-6">
-                  Ready to build <br />
+                <h2 className="text-3xl md:text-4xl lg:text-6xl font-black text-white italic uppercase tracking-tighter mb-4 md:mb-6">
+                  Ready to build <br className="hidden sm:block" />
                   <span className="text-[#00A651]">your future?</span>
                 </h2>
-                <p className="text-xl text-white/70 max-w-xl mx-auto mb-10">
+                <p className="text-lg md:text-xl text-white/70 max-w-xl mx-auto mb-8 md:mb-10">
                   Join the TPI community and become part of the essential workforce keeping the digital world connected.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -329,7 +329,7 @@ export default function AboutClient() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-10 py-5 bg-white text-[#002D72] rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-[#00A651] hover:text-white transition-all shadow-xl inline-flex items-center gap-3 group"
+                      className="w-full sm:w-auto px-10 py-5 bg-white text-[#002D72] rounded-full font-black uppercase tracking-[0.2em] text-xs hover:bg-[#00A651] hover:text-white transition-all shadow-xl inline-flex items-center justify-center gap-3 group"
                     >
                       View courses
                       <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -339,7 +339,7 @@ export default function AboutClient() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-10 py-5 bg-transparent border-2 border-white/30 text-white rounded-full font-black uppercase tracking-[0.2em] text-xs hover:border-white hover:bg-white/10 transition-all inline-flex items-center gap-3"
+                      className="w-full sm:w-auto px-10 py-5 bg-transparent border-2 border-white/30 text-white rounded-full font-black uppercase tracking-[0.2em] text-xs hover:border-white hover:bg-white/10 transition-all inline-flex items-center justify-center gap-3"
                     >
                       Get in touch
                     </motion.button>

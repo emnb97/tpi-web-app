@@ -106,7 +106,7 @@ export default function ContactClient() {
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <Navbar onCartOpen={() => setCartOpen(true)} />
 
-      <main className="bg-white min-h-screen pt-40 px-8 font-genos relative z-10 flex-grow mb-[75vh]">
+      <main className="bg-white min-h-screen pt-32 md:pt-40 px-4 md:px-8 font-genos relative z-10 flex-grow mb-[75vh]">
         <div className="max-w-[1400px] mx-auto">
           
           {/* Back Link */}
@@ -137,7 +137,7 @@ export default function ContactClient() {
             </h1>
           </motion.div>
 
-          <div className="grid grid-cols-12 gap-12">
+          <div className="grid grid-cols-12 gap-8 md:gap-12">
             {/* Form Section */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }}
@@ -145,7 +145,7 @@ export default function ContactClient() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="col-span-12 lg:col-span-7"
             >
-              <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-100/50 overflow-hidden">
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] border border-slate-100 shadow-2xl shadow-slate-100/50 overflow-hidden">
                 <AnimatePresence mode="wait">
                   {!isSubmitted ? (
                     <motion.form
@@ -153,7 +153,7 @@ export default function ContactClient() {
                       initial={{ opacity: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       onSubmit={handleSubmit}
-                      className="p-10 md:p-14"
+                      className="p-6 md:p-14"
                     >
                       <div className="space-y-8">
                         {/* Name & Company Row */}
@@ -307,7 +307,7 @@ export default function ContactClient() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.5 }}
-                      className="p-10 md:p-20 text-center"
+                      className="p-6 md:p-20 text-center"
                     >
                       {/* Logo Flip Animation */}
                       <motion.div 
@@ -366,7 +366,7 @@ export default function ContactClient() {
               className="col-span-12 lg:col-span-5 space-y-8"
             >
               {/* Contact Cards */}
-              <div className="bg-[#002D72] rounded-[2.5rem] p-10 text-white">
+              <div className="bg-[#002D72] rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 text-white">
                 <h3 className="text-2xl font-black italic uppercase tracking-tight mb-8">
                   Contact info
                 </h3>
@@ -380,7 +380,7 @@ export default function ContactClient() {
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-widest text-slate-300 mb-1">Email</p>
-                      <p className="font-bold group-hover:text-[#00A651] transition-colors">
+                      <p className="font-bold text-sm md:text-base group-hover:text-[#00A651] transition-colors">
                         {cms['footer.email'] || "e.osobu@thephysicalinternet.uk"}
                       </p>
                     </div>
@@ -394,7 +394,7 @@ export default function ContactClient() {
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-widest text-slate-300 mb-1">Phone</p>
-                      <p className="font-bold group-hover:text-[#00A651] transition-colors">
+                      <p className="font-bold text-sm md:text-base group-hover:text-[#00A651] transition-colors">
                         {cms['footer.phone'] || "07487 361 240"}
                       </p>
                     </div>
@@ -414,7 +414,7 @@ export default function ContactClient() {
               </div>
 
               {/* Social Links */}
-              <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-10">
+              <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-xl p-6 md:p-10">
                 <h3 className="text-2xl font-black text-[#002D72] italic uppercase tracking-tight mb-6">
                   Follow TPI
                 </h3>
@@ -444,7 +444,7 @@ export default function ContactClient() {
               </div>
 
               {/* Quick Links */}
-              <div className="bg-slate-50 rounded-[2.5rem] p-10">
+              <div className="bg-slate-50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10">
                 <h3 className="text-xl font-black text-[#002D72] italic uppercase tracking-tight mb-6">
                   Quick links
                 </h3>

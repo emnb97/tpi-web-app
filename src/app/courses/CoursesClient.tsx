@@ -320,7 +320,7 @@ export default function CoursesClient() {
         </section>
 
         {/* WHY TPI */}
-        <section className="bg-[#002D72] rounded-[2rem] md:rounded-[5rem] p-8 md:p-16 lg:p-24 relative overflow-hidden text-white font-genos mb-0">
+        <section className="bg-[#002D72] rounded-[2rem] md:rounded-[5rem] p-6 md:p-16 lg:p-24 relative overflow-hidden text-white font-genos mb-0">
           <div className="absolute top-0 right-0 w-1/2 h-full opacity-10">
             <Zap size={300} className="text-white absolute -right-10 md:-right-20 -top-10 md:-top-20 w-[200px] h-[200px] md:w-[400px] md:h-[400px]" />
           </div>

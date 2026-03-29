@@ -9,7 +9,7 @@ import {
   RefreshCw, Download, CheckCircle, ChevronRight, AlertCircle,
   Film, Copy, ExternalLink, Clock, UserPlus, Type, Palette,
   Image as ImgIcon, CheckSquare, Phone, FileText, Home, Info, ShoppingBag, GraduationCap, Wrench,
-  BarChart3, TrendingUp, MousePointer2, Gauge, Globe, Zap, Play, Maximize2
+  BarChart3, TrendingUp, MousePointer2, Gauge, Globe, Zap, Play, Maximize2, Menu
 } from "lucide-react";
 import Image from "next/image";
 import * as adminActions from "../actions/admin";
@@ -172,6 +172,7 @@ interface FontSettings {
 export default function AdminPortal() {
   const [mounted, setMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -670,10 +671,26 @@ export default function AdminPortal() {
 
   // ── DASHBOARD ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#090C10] text-white flex">
+    <div className="min-h-screen bg-[#090C10] text-white flex overflow-x-hidden">
+
+      {/* Mobile Nav Overlay */}
+      {mobileNavOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/60 z-[40]"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
+
+      {/* Mobile Hamburger Button */}
+      <button 
+        className="lg:hidden fixed top-4 right-4 z-[60] p-2.5 bg-[#0D1117] border border-white/10 rounded-lg text-white shadow-xl"
+        onClick={() => setMobileNavOpen(!mobileNavOpen)}
+      >
+        {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
 
       {/* Sidebar */}
-      <aside className="w-52 h-screen bg-[#0D1117] border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-50">
+      <aside className={`w-52 h-screen bg-[#0D1117] border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-50 transform transition-transform duration-300 ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="p-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
             <div className="relative w-6 h-6 shrink-0"><Image src="/tpilogo.png" alt="TPI" fill sizes="24px" className="object-contain" /></div>
@@ -685,7 +702,7 @@ export default function AdminPortal() {
         </div>
         <nav className="flex-grow p-2.5 space-y-0.5 overflow-y-auto">
           {nav.map(item => (
-            <button key={item.id} onClick={() => setActiveTab(item.id)}
+            <button key={item.id} onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left group ${activeTab === item.id ? "bg-[#0072CE]/15 text-[#4BA3E3]" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}>
               <item.icon size={13} strokeWidth={1.75} />
               <span className="flex-grow">{item.label}</span>
@@ -702,7 +719,7 @@ export default function AdminPortal() {
       </aside>
 
       {/* Main */}
-      <main className="flex-grow ml-52 p-8 min-h-screen overflow-auto">
+      <main className="flex-grow lg:ml-52 p-4 md:p-8 min-h-screen overflow-auto w-full overflow-x-hidden pt-20 lg:pt-8">
 
         {/* ── DASHBOARD ───────────────────────────────────────────────── */}
         {activeTab === "dashboard" && (

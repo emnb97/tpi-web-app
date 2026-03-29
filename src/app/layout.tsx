@@ -13,7 +13,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.thephysicalinternet.co.uk"),
+  metadataBase: new URL("https://www.thephysicalinternet.uk"),
   title: {
     default: "The Physical Internet | Structured Cabling Training & Network Infrastructure",
     template: "%s | The Physical Internet",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_GB",
-    url: "https://www.thephysicalinternet.co.uk",
+    url: "https://www.thephysicalinternet.uk",
     siteName: "The Physical Internet",
     title: "The Physical Internet | Structured Cabling Training & Network Infrastructure",
     description:
@@ -66,12 +66,19 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   alternates: {
-    canonical: "https://www.thephysicalinternet.co.uk",
+    canonical: "https://www.thephysicalinternet.uk",
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png' },
+    ],
   },
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -86,8 +93,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "The Physical Internet Ltd",
-              url: "https://www.thephysicalinternet.co.uk",
-              logo: "https://www.thephysicalinternet.co.uk/tpilogo.png",
+              url: "https://www.thephysicalinternet.uk",
+              logo: "https://www.thephysicalinternet.uk/tpilogo.png",
               contactPoint: {
                 "@type": "ContactPoint",
                 telephone: "+447487361240",
@@ -119,7 +126,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               name: "The Physical Internet Ltd",
               description:
                 "UK structured cabling training provider specialising in copper, fibre, ECS certification and network infrastructure career pathways.",
-              url: "https://www.thephysicalinternet.co.uk",
+              url: "https://www.thephysicalinternet.uk",
               telephone: "+447487361240",
               email: "e.osobu@thephysicalinternet.uk",
               address: {

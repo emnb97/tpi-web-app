@@ -44,26 +44,26 @@ const ServiceAccordion = ({ title, desc, fullDesc, imageSrc, isOpen, onToggle, i
     >
       <button
         onClick={onToggle}
-        className="w-full p-8 flex items-center justify-between text-left group"
+        className="w-full p-6 md:p-8 flex items-center justify-between text-left group"
       >
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-6">
           <div 
-            className="w-3 h-12 rounded-full transition-all duration-300"
+            className="w-2 md:w-3 h-10 md:h-12 rounded-full transition-all duration-300"
             style={{ backgroundColor: color, opacity: isOpen ? 1 : 0.4 }}
           />
           <div>
-            <h3 className="text-2xl md:text-3xl font-black text-[#002D72] tracking-tight italic capitalize transition-colors">
+            <h3 className="text-xl md:text-3xl font-black text-[#002D72] tracking-tight italic capitalize transition-colors">
               {title}
             </h3>
             {!isOpen && (
-              <p className="text-slate-500 mt-1 font-medium">{desc}</p>
+              <p className="text-slate-500 text-sm md:text-base mt-1 font-medium">{desc}</p>
             )}
           </div>
         </div>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3 }}
-          className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center shrink-0 group-hover:bg-slate-200 transition-colors"
+          className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-100 flex items-center justify-center shrink-0 group-hover:bg-slate-200 transition-colors"
         >
           {isOpen ? <Minus size={20} className="text-[#002D72]" /> : <Plus size={20} className="text-[#002D72]" />}
         </motion.div>
@@ -78,9 +78,9 @@ const ServiceAccordion = ({ title, desc, fullDesc, imageSrc, isOpen, onToggle, i
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="px-8 pb-8 grid grid-cols-12 gap-8">
-              <div className="col-span-12 lg:col-span-6">
-                <p className="text-xl text-slate-600 leading-relaxed mb-8">{fullDesc}</p>
+            <div className="px-6 md:px-8 pb-6 md:pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+              <div className="col-span-1 lg:col-span-6">
+                <p className="text-base md:text-xl text-slate-600 leading-relaxed mb-6 md:mb-8">{fullDesc}</p>
                 <Link href="/contact">
                   <button 
                     className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-black uppercase text-xs tracking-[0.2em] transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
@@ -90,7 +90,7 @@ const ServiceAccordion = ({ title, desc, fullDesc, imageSrc, isOpen, onToggle, i
                   </button>
                 </Link>
               </div>
-              <div className="col-span-12 lg:col-span-6">
+              <div className="col-span-1 lg:col-span-6">
                 <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
                   <Image 
                     src={imageSrc} 
@@ -125,6 +125,8 @@ const ParallaxCourse = ({ number, title, description, image, offset }: ParallaxC
     target: ref,
     offset: ["start end", "end start"]
   });
+  // Disable parallax on mobile by using a media query or checking window size, 
+  // but framer-motion handles clamping gracefully. We reduce offset effect for smaller screens.
   const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
 
   return (
@@ -133,7 +135,7 @@ const ParallaxCourse = ({ number, title, description, image, offset }: ParallaxC
       style={{ y }}
       className="relative"
     >
-      <div className="relative h-[500px] rounded-[2.5rem] overflow-hidden group cursor-pointer">
+      <div className="relative h-[400px] md:h-[500px] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden group cursor-pointer">
         <Image
           src={image}
           alt={title}
@@ -142,22 +144,22 @@ const ParallaxCourse = ({ number, title, description, image, offset }: ParallaxC
           sizes="(max-width: 768px) 100vw, 33vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#002D72] via-[#002D72]/60 to-transparent" />
-        <div className="absolute inset-0 p-10 flex flex-col justify-end">
-          <span className="text-[120px] font-black text-white/10 absolute top-4 right-6 leading-none">
+        <div className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end">
+          <span className="text-[80px] md:text-[120px] font-black text-white/10 absolute top-4 right-6 leading-none">
             {number}
           </span>
           <div className="relative z-10">
-            <span className="text-[#00A651] font-black uppercase text-xs tracking-[0.3em] mb-2 block">
+            <span className="text-[#00A651] font-black uppercase text-[10px] md:text-xs tracking-[0.3em] mb-2 block">
               Course {number}
             </span>
-            <h3 className="text-3xl font-black text-white italic uppercase tracking-tight mb-3">
+            <h3 className="text-2xl md:text-3xl font-black text-white italic uppercase tracking-tight mb-3">
               {title}
             </h3>
-            <p className="text-white/70 leading-relaxed mb-6 max-w-xs">
+            <p className="text-white/70 text-sm md:text-base leading-relaxed mb-6 max-w-xs">
               {description}
             </p>
             <Link href="/courses">
-              <button className="bg-white text-[#002D72] px-8 py-4 rounded-full font-black uppercase text-[10px] tracking-[0.2em] hover:bg-[#00A651] hover:text-white transition-all">
+              <button className="bg-white text-[#002D72] px-6 md:px-8 py-3 md:py-4 rounded-full font-black uppercase text-[10px] tracking-[0.2em] hover:bg-[#00A651] hover:text-white transition-all">
                 View details
               </button>
             </Link>
@@ -306,15 +308,15 @@ export default function HomePage() {
 
       <main className="relative z-10 flex-grow mb-[75vh] bg-transparent">
         {/* HERO */}
-        <section className="min-h-screen flex items-center justify-center px-8 max-w-[1400px] mx-auto pt-56 pb-12">
-          <div className="grid grid-cols-12 gap-12 w-full items-center">
-            <div className="col-span-12 lg:col-span-7">
+        <section className="min-h-screen flex items-center justify-center px-4 md:px-8 max-w-[1400px] mx-auto pt-32 md:pt-56 pb-12">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 w-full items-center">
+            <div className="col-span-1 md:col-span-12 lg:col-span-7">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
               >
-                <h1 className="text-7xl md:text-[115px] font-black leading-[0.9] tracking-tighter">
+                <h1 className="text-5xl md:text-7xl lg:text-[115px] font-black leading-[0.9] tracking-tighter">
                   <motion.div 
                     whileHover={{ textShadow: "0px 0px 40px rgba(0,114,206,0.5)" }} 
                     className="mb-2 text-[#0072CE] cursor-default transition-all duration-300"
@@ -339,16 +341,16 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="mt-12 max-w-xl border-l-4 border-[#39B54A] pl-8"
+                className="mt-8 md:mt-12 max-w-xl border-l-4 border-[#39B54A] pl-6 md:pl-8"
               >
-                <p className="text-3xl text-[#002D72] font-black italic mb-4 font-genos tracking-tight uppercase">
+                <p className="text-2xl md:text-3xl text-[#002D72] font-black italic mb-4 font-genos tracking-tight uppercase">
                   {cms['home.hero.subtitle'] || "Start your journey, build real skills, stay connected."}
                 </p>
-                <p className="text-lg text-slate-500 font-medium leading-relaxed">
+                <p className="text-base md:text-lg text-slate-500 font-medium leading-relaxed">
                   {cms['home.hero.description'] || "We are a structured cabling company that specialises in network infrastructure and data centre services. Everything you do on the internet runs through copper and fibre cables that TPI works to maintain and install."}
                 </p>
                 <Link href="/courses">
-                  <button className="mt-8 bg-[#002D72] text-white px-12 py-5 rounded-full font-black uppercase text-[10px] tracking-[0.3em] hover:bg-[#39B54A] transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3 group">
+                  <button className="mt-8 bg-[#002D72] text-white px-8 md:px-12 py-4 md:py-5 rounded-full font-black uppercase text-[10px] md:text-xs tracking-[0.3em] hover:bg-[#39B54A] transition-all shadow-xl shadow-blue-900/10 flex items-center gap-3 group">
                     Explore our mission 
                     <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                   </button>
@@ -359,12 +361,12 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
-              className="col-span-12 lg:col-span-5 relative group overflow-hidden rounded-[4rem] shadow-2xl border-[1px] border-slate-200 bg-white"
+              className="col-span-1 md:col-span-12 lg:col-span-5 relative group overflow-hidden rounded-[2rem] md:rounded-[4rem] shadow-2xl border-[1px] border-slate-200 bg-white mt-8 lg:mt-0"
             >
               <motion.div 
                 whileHover={{ scale: 1.02 }} 
                 transition={{ duration: 0.8, ease: "circOut" }} 
-                className="relative w-full aspect-[4/5] overflow-hidden rounded-[3.8rem]"
+                className="relative w-full aspect-[4/5] overflow-hidden rounded-[1.8rem] md:rounded-[3.8rem]"
               >
                 <video autoPlay 
                   ref={heroVideoRef} 
@@ -381,13 +383,13 @@ export default function HomePage() {
         </section>
 
         {/* SERVICES ACCORDION */}
-        <section id="services" className="py-32 px-8 max-w-[1400px] mx-auto relative z-10">
-          <div className="mb-16 font-genos">
+        <section id="services" className="py-16 md:py-32 px-4 md:px-8 max-w-[1400px] mx-auto relative z-10">
+          <div className="mb-10 md:mb-16 font-genos">
             <motion.span
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="text-[#00A651] font-black uppercase tracking-[0.4em] text-sm"
+              className="text-[#00A651] font-black uppercase tracking-[0.4em] text-xs md:text-sm"
             >
               {cms['home.services.tag'] || "How we can help you"}
             </motion.span>
@@ -397,7 +399,7 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
               whileHover={{ textShadow: "0px 0px 40px rgba(0,45,114,0.4)" }}
-              className="text-5xl md:text-7xl font-black text-[#002D72] mt-4 tracking-tighter italic transition-all duration-300"
+              className="text-4xl md:text-5xl lg:text-7xl font-black text-[#002D72] mt-2 md:mt-4 tracking-tighter italic transition-all duration-300"
             >
               {cms['home.services.title'] || "Our core services"}
             </motion.h2>
@@ -441,7 +443,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-slate-200 bg-slate-900 max-w-5xl mx-auto overflow-hidden"
+              className="rounded-[1.5rem] md:rounded-[3rem] shadow-2xl border border-slate-200 bg-slate-900 max-w-5xl mx-auto overflow-hidden"
             >
               <div className="relative aspect-video">
                 <video  
@@ -464,15 +466,15 @@ export default function HomePage() {
         </section>
 
         {/* COURSES - PARALLAX SPLIT */}
-        <section className="py-32 px-8 max-w-[1400px] mx-auto relative z-10">
-          <div className="mb-16 text-center font-genos">
-            <span className="text-[#00A651] font-black uppercase tracking-[0.4em] text-sm">Our programmes</span>
-            <h2 className="text-5xl md:text-7xl font-black text-[#002D72] mt-4 tracking-tighter italic">
+        <section className="py-16 md:py-32 px-4 md:px-8 max-w-[1400px] mx-auto relative z-10">
+          <div className="mb-10 md:mb-16 text-center font-genos">
+            <span className="text-[#00A651] font-black uppercase tracking-[0.4em] text-xs md:text-sm">Our programmes</span>
+            <h2 className="text-4xl md:text-5xl lg:text-7xl font-black text-[#002D72] mt-2 md:mt-4 tracking-tighter italic">
               Course pathways
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             {courses.map((course, index) => (
               <ParallaxCourse
                 key={course.number}
@@ -484,11 +486,11 @@ export default function HomePage() {
         </section>
 
         {/* PROPER PLANNING QUOTE */}
-        <section className="py-32 px-8 max-w-[1400px] mx-auto relative z-10">
+        <section className="py-16 md:py-32 px-4 md:px-8 max-w-[1400px] mx-auto relative z-10">
           <AnimatedHeader className="text-center">
             <motion.h2 
               whileHover={{ textShadow: "0px 0px 60px rgba(0,45,114,0.25)" }} 
-              className="text-5xl md:text-8xl font-black text-[#002D72] tracking-tighter italic leading-none uppercase transition-all duration-500"
+              className="text-4xl md:text-6xl lg:text-8xl font-black text-[#002D72] tracking-tighter italic leading-tight md:leading-none uppercase transition-all duration-500"
             >
               {cms['home.planning.quote'] || "Proper Planning Prevents Poor Performance"}
             </motion.h2>
@@ -496,11 +498,11 @@ export default function HomePage() {
         </section>
 
         {/* GET INVOLVED - MAP SECTION */}
-        <section className="py-32 px-8 max-w-[1400px] mx-auto relative z-10">
-          <div className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden font-genos">
-            <div className="p-12 border-b border-slate-50 flex items-center justify-between flex-wrap gap-6">
-              <div className="flex items-center gap-10">
-                <div className="relative w-32 h-32 group [perspective:2000px] z-50">
+        <section className="py-16 md:py-32 px-4 md:px-8 max-w-[1400px] mx-auto relative z-10">
+          <div className="bg-white rounded-[2rem] md:rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden font-genos">
+            <div className="p-6 md:p-12 border-b border-slate-50 flex items-center justify-between flex-wrap gap-4 md:gap-6">
+              <div className="flex items-center gap-4 md:gap-10">
+                <div className="relative w-16 h-16 md:w-32 md:h-32 group [perspective:2000px] z-50">
                   <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
                     <div className="absolute inset-0 [backface-visibility:hidden]">
                       <Image src="/tpilogo.png" alt="TPI" fill className="object-contain" sizes="128px" />
@@ -510,42 +512,42 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                <h2 className="text-4xl font-black text-[#002D72] tracking-tight italic">
+                <h2 className="text-2xl md:text-4xl font-black text-[#002D72] tracking-tight italic">
                   {cms['home.event.title'] || "Get involved with TPI"}
                 </h2>
               </div>
-              <div className="bg-[#00A651]/10 text-[#00A651] px-6 py-2 rounded-full font-black uppercase text-xs tracking-widest">
+              <div className="bg-[#00A651]/10 text-[#00A651] px-4 md:px-6 py-2 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest">
                 Upcoming event
               </div>
             </div>
-            <div className="grid grid-cols-12">
-              <div className="col-span-12 lg:col-span-5 p-12 bg-[#002D72] text-white">
-                <div className="flex items-center gap-2 text-[#00A651] font-black uppercase text-xs tracking-[0.3em] mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-12">
+              <div className="col-span-1 md:col-span-12 lg:col-span-5 p-6 md:p-12 bg-[#002D72] text-white">
+                <div className="flex items-center gap-2 text-[#00A651] font-black uppercase text-[10px] md:text-xs tracking-[0.3em] mb-4">
                   <Calendar size={16} /> 2026 Season
                 </div>
                 <motion.h3 
                   whileHover={{ textShadow: "0px 0px 30px rgba(0,166,81,0.8)" }} 
-                  className="text-5xl font-black italic tracking-tighter mb-8 leading-none text-[#00A651] cursor-default transition-all duration-300"
+                  className="text-4xl md:text-5xl font-black italic tracking-tighter mb-6 md:mb-8 leading-none text-[#00A651] cursor-default transition-all duration-300"
                 >
                   {cms['home.event.subtitle1'] || "London"} <br /> 
                   {cms['home.event.subtitle2'] || "Networking"} <br /> 
                   {cms['home.event.subtitle3'] || "Session"}
                 </motion.h3>
-                <p className="text-xl text-slate-300 leading-relaxed mb-8">
+                <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-6 md:mb-8">
                   {cms['home.event.description'] || "Join the TPI team in central London. A day dedicated to physical infrastructure, networking, and technical community growth."}
                 </p>
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center gap-4 text-sm font-black uppercase tracking-widest bg-white/10 p-4 rounded-2xl border border-white/5">
+                <div className="space-y-4 mb-6 md:mb-8">
+                  <div className="flex items-center gap-3 md:gap-4 text-xs md:text-sm font-black uppercase tracking-widest bg-white/10 p-3 md:p-4 rounded-2xl border border-white/5">
                     <MapPin className="text-[#00A651]" /> Central London
                   </div>
                 </div>
                 <Link href="/contact">
-                  <button className="w-full bg-white text-[#002D72] py-5 rounded-full font-black uppercase text-xs tracking-widest hover:bg-[#00A651] hover:text-white transition-all shadow-xl">
+                  <button className="w-full bg-white text-[#002D72] py-4 md:py-5 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest hover:bg-[#00A651] hover:text-white transition-all shadow-xl">
                     Register interest
                   </button>
                 </Link>
               </div>
-              <div className="col-span-12 lg:col-span-7 h-[600px] relative grayscale hover:grayscale-0 transition-all duration-1000">
+              <div className="col-span-1 md:col-span-12 lg:col-span-7 h-[400px] md:h-[600px] relative grayscale hover:grayscale-0 transition-all duration-1000">
                 <iframe 
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d158858.47340003058!2d-0.24168147910967396!3d51.52855824174697!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47d8a00baf21de75%3A0x52963a5addd52a99!2sLondon!5e0!3m2!1sen!2suk!4v1700000000000!5m2!1sen!2suk" 
                   width="100%" 
@@ -562,29 +564,29 @@ export default function HomePage() {
         </section>
 
         {/* CONTACT SECTION */}
-        <section className="py-32 px-8 max-w-[1400px] mx-auto relative z-10">
-          <div className="bg-white rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden">
-            <div className="p-12 md:p-20 text-center max-w-3xl mx-auto">
-              <h2 className="text-5xl md:text-6xl font-black text-[#002D72] italic uppercase tracking-tighter mb-8 leading-none font-genos">
-                {cms['home.contact.title1'] || "Get connected"} <br /> 
+        <section className="py-16 md:py-32 px-4 md:px-8 max-w-[1400px] mx-auto relative z-10">
+          <div className="bg-white rounded-[2rem] md:rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden">
+            <div className="p-8 md:p-20 text-center max-w-3xl mx-auto">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-[#002D72] italic uppercase tracking-tighter mb-6 md:mb-8 leading-tight md:leading-none font-genos">
+                {cms['home.contact.title1'] || "Get connected"} <br className="hidden sm:block" /> 
                 {cms['home.contact.title2'] || "with TPI"}
               </h2>
-              <p className="text-xl text-slate-500 mb-12 leading-relaxed">
+              <p className="text-lg md:text-xl text-slate-500 mb-8 md:mb-12 leading-relaxed">
                 Ready to start your journey in data cabling? Get in touch with our team today.
               </p>
 
               {/* Contact Info */}
-              <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-12">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-8 md:mb-12">
                 <a 
                   href="mailto:e.osobu@thephysicalinternet.uk" 
-                  className="flex items-center gap-3 text-[#002D72] font-bold hover:text-[#0072CE] transition-colors"
+                  className="flex items-center gap-3 text-sm md:text-base text-[#002D72] font-bold hover:text-[#0072CE] transition-colors"
                 >
                   <Mail size={20} />
                   e.osobu@thephysicalinternet.uk
                 </a>
                 <a 
                   href="tel:07487361240" 
-                  className="flex items-center gap-3 text-[#002D72] font-bold hover:text-[#0072CE] transition-colors"
+                  className="flex items-center gap-3 text-sm md:text-base text-[#002D72] font-bold hover:text-[#0072CE] transition-colors"
                 >
                   <Phone size={20} />
                   07487 361 240
@@ -592,12 +594,12 @@ export default function HomePage() {
               </div>
 
               {/* Social Links */}
-              <div className="flex items-center justify-center gap-4 mb-12">
+              <div className="flex items-center justify-center gap-4 mb-8 md:mb-12">
                 <a
                   href={cms['footer.instagram'] || "https://www.instagram.com/thephysicalinternet"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-4 bg-slate-100 rounded-2xl hover:bg-[#E4405F] hover:text-white transition-all group"
+                  className="p-3 md:p-4 bg-slate-100 rounded-2xl hover:bg-[#E4405F] hover:text-white transition-all group"
                 >
                   <Instagram size={24} />
                 </a>
@@ -605,7 +607,7 @@ export default function HomePage() {
                   href={cms['footer.tiktok'] || "https://www.tiktok.com/@manny_tpi"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-4 bg-slate-100 rounded-2xl hover:bg-black hover:text-white transition-all group"
+                  className="p-3 md:p-4 bg-slate-100 rounded-2xl hover:bg-black hover:text-white transition-all group"
                 >
                   <TikTokIcon size={24} />
                 </a>
@@ -613,7 +615,7 @@ export default function HomePage() {
 
               {/* CTA Button */}
               <Link href="/contact">
-                <button className="bg-[#002D72] text-white px-16 py-6 rounded-full font-black uppercase tracking-[0.3em] text-xs hover:bg-[#0072CE] transition-all shadow-xl shadow-blue-900/10 inline-flex items-center gap-3 group">
+                <button className="w-full sm:w-auto bg-[#002D72] text-white px-12 md:px-16 py-5 md:py-6 rounded-full font-black uppercase tracking-[0.3em] text-[10px] md:text-xs hover:bg-[#0072CE] transition-all shadow-xl shadow-blue-900/10 inline-flex items-center justify-center gap-3 group">
                   Contact us
                   <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </button>

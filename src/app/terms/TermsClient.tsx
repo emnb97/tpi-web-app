@@ -36,23 +36,23 @@ export default function TermsClient() {
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <Navbar onCartOpen={() => setCartOpen(true)} />
 
-      <main className="relative z-10 flex-grow mb-[75vh] pt-48 px-8 max-w-[1400px] mx-auto pb-32">
-        <span className="text-[#00A651] font-black uppercase tracking-[0.4em] text-sm font-genos">{cms['terms.hero.tag'] || "Legal"}</span>
-        <h1 className="text-7xl md:text-9xl font-black text-[#002D72] leading-[0.85] uppercase tracking-tighter mt-6 mb-4 font-genos">
+      <main className="relative z-10 flex-grow mb-[75vh] pt-32 md:pt-48 px-4 md:px-8 max-w-[1400px] mx-auto pb-16 md:pb-32">
+        <span className="text-[#00A651] font-black uppercase tracking-[0.4em] text-[10px] md:text-sm font-genos">{cms['terms.hero.tag'] || "Legal"}</span>
+        <h1 className="text-5xl md:text-7xl lg:text-9xl font-black text-[#002D72] leading-[0.85] uppercase tracking-tight md:tracking-tighter mt-4 md:mt-6 mb-4 font-genos">
           Terms &amp; <br />
           <span className="text-[#0072CE] italic">Conditions.</span>
         </h1>
-        <p className="text-slate-400 text-lg font-medium mt-6 mb-24 max-w-xl leading-relaxed">{cms['terms.hero.description'] || "Last updated: January 2026. Please read these terms carefully before using TPI's website, enrolling on a course, or making a purchase."}</p>
+        <p className="text-slate-400 text-base md:text-lg font-medium mt-4 md:mt-6 mb-16 md:mb-24 max-w-xl leading-relaxed">{cms['terms.hero.description'] || "Last updated: January 2026. Please read these terms carefully before using TPI's website, enrolling on a course, or making a purchase."}</p>
 
-        <div className="space-y-12">
+        <div className="space-y-8 md:space-y-12">
           {sections.map((section, i) => (
-            <div key={i} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-12 grid grid-cols-12 gap-8">
-              <div className="col-span-12 md:col-span-3">
-                <span className="text-[#00A651] font-black uppercase text-xs tracking-widest">0{i + 1}</span>
-                <h2 className="text-2xl font-black text-[#002D72] italic uppercase mt-2 leading-tight font-genos">{section.title}</h2>
+            <div key={i} className="bg-white rounded-[2rem] md:rounded-[3rem] border border-slate-100 shadow-sm p-6 md:p-12 lg:p-16 grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+              <div className="col-span-1 md:col-span-12 lg:col-span-3">
+                <span className="text-[#00A651] font-black uppercase text-[10px] md:text-xs tracking-widest">0{i + 1}</span>
+                <h2 className="text-xl md:text-2xl font-black text-[#002D72] italic uppercase mt-1 md:mt-2 leading-tight font-genos">{section.title}</h2>
               </div>
-              <div className="col-span-12 md:col-span-9">
-                <p className="text-slate-500 text-lg leading-relaxed">{section.content}</p>
+              <div className="col-span-1 md:col-span-12 lg:col-span-9">
+                <p className="text-slate-500 text-base md:text-lg leading-relaxed">{section.content}</p>
               </div>
             </div>
           ))}
