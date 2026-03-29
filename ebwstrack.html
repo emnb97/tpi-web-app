@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ebwstrack — Intelligent Analytics for Modern Teams</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Outfit', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        void:    '#06070A',
+        surface: '#0C0E14',
+        card:    '#11131B',
+        border:  '#1A1D2B',
+        dim:     '#3A3F55',
+        muted:   '#6B7194',
+        accent:  '#6C5CE7',
+        accent2: '#00D2FF',
+        glow:    '#6C5CE7',
+        mint:    '#00E5A0',
+        peach:   '#FF6B6B',
+      },
+    }
+  }
+}
+</script>
+
+<style>
+  *, *::before, *::after { font-family: 'Outfit', sans-serif; }
+  html { scroll-behavior: smooth; }
+  body { background: #06070A; color: #E4E6F0; overflow-x: hidden; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes riseUp    { from{opacity:0;transform:translateY(44px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeScale { from{opacity:0;transform:scale(.95)}      to{opacity:1;transform:scale(1)} }
+  @keyframes fadeIn    { from{opacity:0}                            to{opacity:1} }
+  @keyframes slideR    { from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)} }
+  @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes pulse-glow{ 0%,100%{opacity:.5} 50%{opacity:1} }
+  @keyframes marquee   { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+  @keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes orbit     { 0%{transform:rotate(0deg) translateX(140px) rotate(0deg)}
+                          100%{transform:rotate(360deg) translateX(140px) rotate(-360deg)} }
+  @keyframes spin-slow { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+  @keyframes bar-grow  { from{width:0} to{width:var(--w)} }
+  @keyframes count-up  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  .ao{opacity:0}
+  .ao.in{animation-fill-mode:both}
+  .ao.in.rise{animation:riseUp .85s cubic-bezier(.22,1,.36,1) forwards}
+  .ao.in.fs{animation:fadeScale .8s cubic-bezier(.22,1,.36,1) forwards}
+  .ao.in.fi{animation:fadeIn .7s ease forwards}
+  .ao.in.sr{animation:slideR .8s cubic-bezier(.22,1,.36,1) forwards}
+
+  .d1{animation-delay:.07s!important} .d2{animation-delay:.14s!important}
+  .d3{animation-delay:.21s!important} .d4{animation-delay:.28s!important}
+  .d5{animation-delay:.35s!important} .d6{animation-delay:.42s!important}
+  .d7{animation-delay:.49s!important} .d8{animation-delay:.56s!important}
+  .d9{animation-delay:.63s!important} .d10{animation-delay:.70s!important}
+
+  /* ── CARD SYSTEM ── */
+  .saas-card {
+    background: #11131B;
+    border: 1px solid #1A1D2B;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform .45s cubic-bezier(.22,1,.36,1),
+                box-shadow .45s cubic-bezier(.22,1,.36,1),
+                border-color .35s ease;
+  }
+  .saas-card:hover {
+    transform: translateY(-4px);
+    border-color: #2A2E42;
+    box-shadow: 0 16px 48px -12px rgba(108,92,231,.1), 0 4px 16px rgba(0,0,0,.3);
+  }
+
+  /* ── GLOW BUTTON ── */
+  .btn-glow {
+    position: relative; overflow: hidden; z-index: 1;
+    background: linear-gradient(135deg, #6C5CE7, #00D2FF);
+    transition: box-shadow .3s ease, transform .3s ease;
+  }
+  .btn-glow:hover {
+    box-shadow: 0 0 30px rgba(108,92,231,.4), 0 0 60px rgba(0,210,255,.15);
+    transform: translateY(-1px);
+  }
+  .btn-glow::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(135deg, rgba(255,255,255,.15), transparent 60%);
+    z-index: 2;
+  }
+
+  .btn-ghost {
+    border: 1px solid #1A1D2B;
+    transition: border-color .3s, background .3s, transform .3s ease;
+  }
+  .btn-ghost:hover {
+    border-color: #2A2E42;
+    background: rgba(255,255,255,.03);
+    transform: translateY(-1px);
+  }
+
+  /* ── NAV LINK ── */
+  .nav-link { position: relative; }
+  .nav-link::after {
+    content:''; position:absolute; bottom:-4px; left:50%; right:50%;
+    height:2px; border-radius:1px;
+    background: linear-gradient(90deg, #6C5CE7, #00D2FF);
+    transition: left .3s cubic-bezier(.22,1,.36,1), right .3s cubic-bezier(.22,1,.36,1);
+  }
+  .nav-link:hover::after { left:0; right:0; }
+
+  /* ── MARQUEE ── */
+  .marquee-track { display:flex; width:max-content; animation:marquee 40s linear infinite; }
+  .marquee-track:hover { animation-play-state:paused; }
+
+  /* ── MESH GRADIENT BG ── */
+  .mesh-hero {
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 0%, rgba(108,92,231,.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 10%, rgba(0,210,255,.08) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 50% 80%, rgba(108,92,231,.06) 0%, transparent 50%);
+  }
+  .mesh-pricing {
+    background:
+      radial-gradient(ellipse 50% 50% at 30% 50%, rgba(108,92,231,.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 70% 50%, rgba(0,210,255,.06) 0%, transparent 50%);
+  }
+
+  /* ── BAR CHART ANIMATION ── */
+  .bar-anim { width: 0; animation: bar-grow 1.2s cubic-bezier(.22,1,.36,1) forwards; }
+
+  /* ── SHIMMER BADGE ── */
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* ── GRID PATTERN ── */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(108,92,231,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,92,231,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ── FLOATING ORBS ── */
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(60px); pointer-events: none;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width:5px }
+  ::-webkit-scrollbar-track { background:transparent }
+  ::-webkit-scrollbar-thumb { background:#1A1D2B; border-radius:10px }
+  ::-webkit-scrollbar-thumb:hover { background:#2A2E42 }
+
+  /* ── TOGGLE ── */
+  .toggle-bg { transition: background .3s ease; }
+  .toggle-dot { transition: transform .3s cubic-bezier(.22,1,.36,1); }
+</style>
+</head>
+
+<body class="antialiased">
+
+<!-- ════════════════════════════════════════════
+     NAVIGATION
+     ════════════════════════════════════════════ -->
+<nav class="fixed top-0 left-0 right-0 z-50">
+  <div class="mx-4 md:mx-6 mt-4">
+    <div class="max-w-6xl mx-auto bg-surface/60 backdrop-blur-2xl border border-border rounded-2xl px-5 md:px-6 h-14 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2 ao rise">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+        </div>
+        <span class="text-[15px] font-bold tracking-tight text-white">ebws<span class="text-muted">track</span></span>
+      </a>
+      <!-- Links -->
+      <div class="hidden md:flex items-center gap-7">
+        <a href="#features" class="nav-link text-[13px] font-medium text-muted hover:text-white transition-colors duration-300 ao rise d1">Features</a>
+        <a href="#integrations" class="nav-link text-[13px] font-medium text-muted hover:text-white transition-colors duration-300 ao rise d2">Integrations</a>
+        <a href="#pricing" class="nav-link text-[13px] font-medium text-muted hover:text-white transition-colors duration-300 ao rise d3">Pricing</a>
+        <a href="#cta" class="nav-link text-[13px] font-medium text-muted hover:text-white transition-colors duration-300 ao rise d4">About</a>
+      </div>
+      <!-- CTA -->
+      <div class="flex items-center gap-3 ao rise d5">
+        <a href="#cta" class="hidden md:block text-[13px] font-medium text-muted hover:text-white transition-colors duration-300">Sign In</a>
+        <a href="#cta" class="btn-glow text-[13px] font-semibold text-white px-5 py-2 rounded-xl">Get Started</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════════
+     HERO
+     ════════════════════════════════════════════ -->
+<section class="relative mesh-hero min-h-screen flex items-center pt-20 pb-10 overflow-hidden">
+  <!-- Background orbs -->
+  <div class="orb w-[400px] h-[400px] bg-accent/10 top-[-100px] left-[-100px]" style="animation-delay:0s"></div>
+  <div class="orb w-[300px] h-[300px] bg-accent2/8 top-[20%] right-[-80px]" style="animation-delay:2s"></div>
+
+  <div class="max-w-6xl mx-auto px-4 md:px-6 w-full text-center relative z-10">
+    <!-- Badge -->
+    <div class="inline-flex items-center gap-2 shimmer border border-border rounded-full px-4 py-1.5 mb-8 ao rise">
+      <span class="w-2 h-2 rounded-full bg-mint animate-pulse"></span>
+      <span class="text-xs font-medium text-muted">Now in Public Beta — v2.4 just shipped</span>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-[-0.04em] leading-[1.08] text-white mb-6 ao rise d1">
+      Analytics that<br>
+      <span class="bg-gradient-to-r from-accent via-accent2 to-mint bg-clip-text text-transparent">actually move</span><br>
+      the needle
+    </h1>
+
+    <p class="text-base md:text-lg text-muted leading-relaxed max-w-xl mx-auto mb-10 ao rise d2">
+      ebwstrack gives your team real-time insights, predictive forecasting, and automated reporting — all in one beautifully crafted dashboard.
+    </p>
+
+    <!-- CTA buttons -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16 ao rise d3">
+      <a href="#cta" class="btn-glow text-sm font-semibold text-white px-8 py-3.5 rounded-xl">
+        Start Free Trial
+      </a>
+      <a href="#features" class="btn-ghost text-sm font-medium text-muted hover:text-white px-7 py-3.5 rounded-xl flex items-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        Watch Demo
+      </a>
+    </div>
+
+    <!-- ── PRODUCT PREVIEW ── -->
+    <div class="relative max-w-4xl mx-auto ao fs d4">
+      <!-- Glow behind preview -->
+      <div class="absolute -inset-4 bg-gradient-to-r from-accent/20 via-accent2/10 to-accent/20 rounded-3xl blur-2xl opacity-40"></div>
+
+      <div class="relative bg-card border border-border rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
+        <!-- Window bar -->
+        <div class="flex items-center gap-2 px-5 py-3 border-b border-border bg-surface/50">
+          <span class="w-3 h-3 rounded-full bg-peach/60"></span>
+          <span class="w-3 h-3 rounded-full bg-[#FBBF24]/60"></span>
+          <span class="w-3 h-3 rounded-full bg-mint/60"></span>
+          <span class="flex-1 text-center text-[11px] font-mono text-dim">dashboard.ebwstrack.io</span>
+        </div>
+        <!-- Dashboard content -->
+        <div class="p-4 md:p-6 grid-bg">
+          <div class="grid grid-cols-3 md:grid-cols-12 gap-3">
+            <!-- Sidebar mini -->
+            <div class="hidden md:flex md:col-span-2 flex-col gap-2 py-2">
+              <div class="w-full h-3 rounded bg-border/60"></div>
+              <div class="w-3/4 h-3 rounded bg-border/40"></div>
+              <div class="w-full h-3 rounded bg-accent/20 border border-accent/20"></div>
+              <div class="w-5/6 h-3 rounded bg-border/40"></div>
+              <div class="w-2/3 h-3 rounded bg-border/30"></div>
+              <div class="mt-auto w-full h-3 rounded bg-border/30"></div>
+            </div>
+
+            <!-- Main area -->
+            <div class="col-span-3 md:col-span-10 space-y-3">
+              <!-- Metric cards row -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-surface/80 border border-border rounded-xl p-3">
+                  <p class="text-[10px] text-dim font-medium mb-1">Revenue</p>
+                  <p class="text-lg font-bold text-white">$48.2k</p>
+                  <p class="text-[10px] text-mint font-mono mt-0.5">↑ 12.4%</p>
+                </div>
+                <div class="bg-surface/80 border border-border rounded-xl p-3">
+                  <p class="text-[10px] text-dim font-medium mb-1">Users</p>
+                  <p class="text-lg font-bold text-white">2,847</p>
+                  <p class="text-[10px] text-accent2 font-mono mt-0.5">↑ 8.2%</p>
+                </div>
+                <div class="hidden md:block bg-surface/80 border border-border rounded-xl p-3">
+                  <p class="text-[10px] text-dim font-medium mb-1">Conv. Rate</p>
+                  <p class="text-lg font-bold text-white">3.6%</p>
+                  <p class="text-[10px] text-mint font-mono mt-0.5">↑ 0.4%</p>
+                </div>
+                <div class="hidden md:block bg-surface/80 border border-border rounded-xl p-3">
+                  <p class="text-[10px] text-dim font-medium mb-1">Churn</p>
+                  <p class="text-lg font-bold text-white">1.2%</p>
+                  <p class="text-[10px] text-peach font-mono mt-0.5">↓ 0.3%</p>
+                </div>
+              </div>
+              <!-- Chart area -->
+              <div class="bg-surface/80 border border-border rounded-xl p-4">
+                <div class="flex items-center justify-between mb-4">
+                  <p class="text-xs font-semibold text-white/80">Revenue Overview</p>
+                  <div class="flex gap-2">
+                    <span class="text-[10px] text-dim font-medium px-2 py-0.5 rounded bg-border/40">7D</span>
+                    <span class="text-[10px] text-white font-medium px-2 py-0.5 rounded bg-accent/20 border border-accent/30">30D</span>
+                    <span class="text-[10px] text-dim font-medium px-2 py-0.5 rounded bg-border/40">90D</span>
+                  </div>
+                </div>
+                <!-- SVG Chart -->
+                <svg class="w-full h-28 md:h-36" viewBox="0 0 600 140" fill="none">
+                  <defs>
+                    <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#6C5CE7" stop-opacity=".3"/>
+                      <stop offset="100%" stop-color="#6C5CE7" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stop-color="#6C5CE7"/>
+                      <stop offset="100%" stop-color="#00D2FF"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,110 C50,100 80,90 120,85 C160,80 200,70 240,55 C280,40 320,60 360,45 C400,30 440,35 480,20 C520,8 560,15 600,5 L600,140 L0,140Z" fill="url(#cg)"/>
+                  <path d="M0,110 C50,100 80,90 120,85 C160,80 200,70 240,55 C280,40 320,60 360,45 C400,30 440,35 480,20 C520,8 560,15 600,5" stroke="url(#lg)" stroke-width="2.5" fill="none"/>
+                  <circle cx="480" cy="20" r="4" fill="#00D2FF" class="animate-pulse"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trusted by -->
+    <div class="mt-14 ao rise d6">
+      <p class="text-xs font-medium text-dim mb-5 tracking-wider uppercase">Trusted by teams at</p>
+      <div class="flex items-center justify-center gap-8 md:gap-12 flex-wrap opacity-30">
+        <span class="text-lg font-bold tracking-tight">Stripe</span>
+        <span class="text-lg font-bold tracking-tight">Vercel</span>
+        <span class="text-lg font-bold tracking-tight">Linear</span>
+        <span class="text-lg font-bold tracking-tight">Notion</span>
+        <span class="text-lg font-bold tracking-tight">Figma</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     FEATURE BENTO GRID
+     ════════════════════════════════════════════ -->
+<section id="features" class="py-24 md:py-32 px-4 md:px-6 relative">
+  <div class="max-w-6xl mx-auto">
+    <!-- Section header -->
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <span class="inline-block text-[11px] font-bold tracking-[.2em] uppercase text-accent mb-4 ao rise">Features</span>
+      <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-tight text-white mb-4 ao rise d1">
+        Everything you need,<br><span class="text-muted">nothing you don't</span>
+      </h2>
+      <p class="text-base text-muted leading-relaxed ao rise d2">Built for speed, designed for clarity. Every feature earns its place.</p>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+
+      <!-- ── Card 1: Real-time (Large, with chart UI) ── -->
+      <div class="md:col-span-7 saas-card p-6 md:p-8 min-h-[320px] flex flex-col justify-between ao fs d1">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Real-Time Analytics</h3>
+          <p class="text-sm text-muted leading-relaxed max-w-sm">Sub-second data streaming with live dashboards. See exactly what's happening, as it happens.</p>
+        </div>
+        <!-- Mini bar chart UI -->
+        <div class="mt-6 flex items-end gap-2 h-20">
+          <div class="bar-anim h-[35%] rounded-md bg-gradient-to-t from-accent/40 to-accent/80 flex-1" style="--w:100%;animation-delay:.3s"></div>
+          <div class="bar-anim h-[55%] rounded-md bg-gradient-to-t from-accent/40 to-accent/80 flex-1" style="--w:100%;animation-delay:.4s"></div>
+          <div class="bar-anim h-[40%] rounded-md bg-gradient-to-t from-accent/40 to-accent/80 flex-1" style="--w:100%;animation-delay:.5s"></div>
+          <div class="bar-anim h-[70%] rounded-md bg-gradient-to-t from-accent2/40 to-accent2/80 flex-1" style="--w:100%;animation-delay:.6s"></div>
+          <div class="bar-anim h-[60%] rounded-md bg-gradient-to-t from-accent/40 to-accent/80 flex-1" style="--w:100%;animation-delay:.7s"></div>
+          <div class="bar-anim h-[85%] rounded-md bg-gradient-to-t from-accent2/40 to-accent2/80 flex-1" style="--w:100%;animation-delay:.8s"></div>
+          <div class="bar-anim h-[50%] rounded-md bg-gradient-to-t from-accent/40 to-accent/80 flex-1" style="--w:100%;animation-delay:.9s"></div>
+          <div class="bar-anim h-[95%] rounded-md bg-gradient-to-t from-mint/40 to-mint/80 flex-1" style="--w:100%;animation-delay:1s"></div>
+        </div>
+      </div>
+
+      <!-- ── Card 2: AI Insights ── -->
+      <div class="md:col-span-5 saas-card p-6 md:p-8 min-h-[320px] flex flex-col justify-between ao fs d2">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-accent2/10 border border-accent2/20 flex items-center justify-center mb-5">
+            <svg class="w-5 h-5 text-accent2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">AI-Powered Insights</h3>
+          <p class="text-sm text-muted leading-relaxed">Automated anomaly detection and predictive forecasting built on your live data streams.</p>
+        </div>
+        <!-- AI suggestion UI -->
+        <div class="mt-6 space-y-2">
+          <div class="bg-surface/80 border border-border rounded-lg p-3 flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-mint/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="w-1.5 h-1.5 rounded-full bg-mint"></span></span>
+            <div>
+              <p class="text-xs font-medium text-white/80">Revenue spike predicted</p>
+              <p class="text-[10px] text-dim mt-0.5">+23% expected this week based on traffic trends</p>
+            </div>
+          </div>
+          <div class="bg-surface/80 border border-border rounded-lg p-3 flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-peach/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="w-1.5 h-1.5 rounded-full bg-peach"></span></span>
+            <div>
+              <p class="text-xs font-medium text-white/80">Churn risk detected</p>
+              <p class="text-[10px] text-dim mt-0.5">12 accounts showing disengagement signals</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Card 3: Collaboration ── -->
+      <div class="md:col-span-4 saas-card p-6 md:p-8 ao fs d3">
+        <div class="w-10 h-10 rounded-xl bg-mint/10 border border-mint/20 flex items-center justify-center mb-5">
+          <svg class="w-5 h-5 text-mint" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Team Workspaces</h3>
+        <p class="text-sm text-muted leading-relaxed mb-5">Shared dashboards, annotations, and real-time collaboration across your entire org.</p>
+        <!-- Avatar stack -->
+        <div class="flex items-center">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent2 border-2 border-card flex items-center justify-center text-[10px] font-bold text-white">JD</div>
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-peach to-[#FBBF24] border-2 border-card -ml-2 flex items-center justify-center text-[10px] font-bold text-white">AK</div>
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-mint to-accent2 border-2 border-card -ml-2 flex items-center justify-center text-[10px] font-bold text-white">TS</div>
+          <div class="w-8 h-8 rounded-full bg-dim/40 border-2 border-card -ml-2 flex items-center justify-center text-[10px] font-medium text-muted">+8</div>
+        </div>
+      </div>
+
+      <!-- ── Card 4: Automations (toggle UI) ── -->
+      <div class="md:col-span-4 saas-card p-6 md:p-8 ao fs d4">
+        <div class="w-10 h-10 rounded-xl bg-[#FBBF24]/10 border border-[#FBBF24]/20 flex items-center justify-center mb-5">
+          <svg class="w-5 h-5 text-[#FBBF24]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205L6.75 2.906"/></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Smart Automations</h3>
+        <p class="text-sm text-muted leading-relaxed mb-5">Set triggers, schedule reports, and let ebwstrack handle the repetitive work for you.</p>
+        <!-- Toggle UI -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between bg-surface/60 border border-border rounded-lg px-3 py-2">
+            <span class="text-xs font-medium text-white/70">Weekly digest</span>
+            <div class="w-9 h-5 rounded-full bg-mint/80 flex items-center px-0.5 cursor-pointer"><div class="w-4 h-4 rounded-full bg-white transform translate-x-4"></div></div>
+          </div>
+          <div class="flex items-center justify-between bg-surface/60 border border-border rounded-lg px-3 py-2">
+            <span class="text-xs font-medium text-white/70">Anomaly alerts</span>
+            <div class="w-9 h-5 rounded-full bg-mint/80 flex items-center px-0.5 cursor-pointer"><div class="w-4 h-4 rounded-full bg-white transform translate-x-4"></div></div>
+          </div>
+          <div class="flex items-center justify-between bg-surface/60 border border-border rounded-lg px-3 py-2">
+            <span class="text-xs font-medium text-white/70">Slack sync</span>
+            <div class="w-9 h-5 rounded-full bg-dim/40 flex items-center px-0.5 cursor-pointer"><div class="w-4 h-4 rounded-full bg-white/60 transform translate-x-0"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Card 5: API/Dev (code snippet) ── -->
+      <div class="md:col-span-4 saas-card p-6 md:p-8 ao fs d5">
+        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-5">
+          <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Developer API</h3>
+        <p class="text-sm text-muted leading-relaxed mb-5">RESTful endpoints with SDKs for Python, Node, and Go. Ship custom integrations fast.</p>
+        <!-- Code snippet -->
+        <div class="bg-void border border-border rounded-lg p-3 font-mono text-[11px] leading-relaxed overflow-x-auto">
+          <span class="text-accent">const</span> <span class="text-white">data</span> = <span class="text-accent">await</span> <span class="text-accent2">ebws</span>
+          <br>&nbsp;&nbsp;.<span class="text-mint">analytics</span>.<span class="text-white">query</span>({
+          <br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-peach">metric</span>: <span class="text-[#FBBF24]">"revenue"</span>,
+          <br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-peach">range</span>: <span class="text-[#FBBF24]">"30d"</span>
+          <br>&nbsp;&nbsp;});
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     INTEGRATIONS MARQUEE
+     ════════════════════════════════════════════ -->
+<section id="integrations" class="py-20 border-y border-border overflow-hidden">
+  <div class="max-w-6xl mx-auto px-4 md:px-6 mb-12 text-center">
+    <span class="inline-block text-[11px] font-bold tracking-[.2em] uppercase text-accent mb-4 ao rise">Integrations</span>
+    <h2 class="text-3xl md:text-4xl font-extrabold tracking-[-0.03em] text-white mb-3 ao rise d1">Connects to your entire stack</h2>
+    <p class="text-base text-muted ao rise d2">50+ native integrations. If it has an API, we connect to it.</p>
+  </div>
+
+  <!-- Marquee Row 1 -->
+  <div class="mb-3 overflow-hidden">
+    <div class="marquee-track">
+      <div class="flex gap-3 px-1.5">
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#635BFF]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#635BFF]">S</span></div><span class="text-sm font-semibold text-white/80">Stripe</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#E01E5A]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#E01E5A]">S</span></div><span class="text-sm font-semibold text-white/80">Slack</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#0052CC]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#0052CC]">J</span></div><span class="text-sm font-semibold text-white/80">Jira</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center"><span class="text-sm font-bold text-white/70">N</span></div><span class="text-sm font-semibold text-white/80">Notion</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#FF4F00]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#FF4F00]">Z</span></div><span class="text-sm font-semibold text-white/80">Zapier</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#7B68EE]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#7B68EE]">L</span></div><span class="text-sm font-semibold text-white/80">Linear</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#4285F4]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#4285F4]">G</span></div><span class="text-sm font-semibold text-white/80">Google</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#FF9900]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#FF9900]">A</span></div><span class="text-sm font-semibold text-white/80">AWS</span></div>
+      </div>
+      <!-- Duplicate -->
+      <div class="flex gap-3 px-1.5" aria-hidden="true">
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#635BFF]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#635BFF]">S</span></div><span class="text-sm font-semibold text-white/80">Stripe</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#E01E5A]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#E01E5A]">S</span></div><span class="text-sm font-semibold text-white/80">Slack</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#0052CC]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#0052CC]">J</span></div><span class="text-sm font-semibold text-white/80">Jira</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center"><span class="text-sm font-bold text-white/70">N</span></div><span class="text-sm font-semibold text-white/80">Notion</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#FF4F00]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#FF4F00]">Z</span></div><span class="text-sm font-semibold text-white/80">Zapier</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#7B68EE]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#7B68EE]">L</span></div><span class="text-sm font-semibold text-white/80">Linear</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#4285F4]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#4285F4]">G</span></div><span class="text-sm font-semibold text-white/80">Google</span></div>
+        <div class="saas-card flex items-center gap-3 px-5 py-3 min-w-[160px]"><div class="w-8 h-8 rounded-lg bg-[#FF9900]/15 flex items-center justify-center"><span class="text-sm font-bold text-[#FF9900]">A</span></div><span class="text-sm font-semibold text-white/80">AWS</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     PRICING
+     ════════════════════════════════════════════ -->
+<section id="pricing" class="py-24 md:py-32 px-4 md:px-6 relative mesh-pricing">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <span class="inline-block text-[11px] font-bold tracking-[.2em] uppercase text-accent mb-4 ao rise">Pricing</span>
+      <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-[-0.03em] leading-tight text-white mb-4 ao rise d1">
+        Simple, transparent<br><span class="text-muted">pricing</span>
+      </h2>
+      <p class="text-base text-muted leading-relaxed ao rise d2">No hidden fees. No surprises. Cancel anytime.</p>
+
+      <!-- Toggle -->
+      <div class="flex items-center justify-center gap-3 mt-8 ao rise d3">
+        <span class="text-sm font-medium text-white" id="monthLabel">Monthly</span>
+        <button onclick="togglePricing()" id="pricingToggle" class="w-12 h-6 rounded-full bg-border flex items-center px-0.5 cursor-pointer transition-colors duration-300">
+          <div id="toggleDot" class="w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300"></div>
+        </button>
+        <span class="text-sm font-medium text-muted" id="yearLabel">Yearly <span class="text-mint text-xs font-bold">-20%</span></span>
+      </div>
+    </div>
+
+    <!-- Pricing cards -->
+    <div class="grid md:grid-cols-3 gap-4">
+
+      <!-- Free -->
+      <div class="saas-card p-7 flex flex-col ao fs d1">
+        <h3 class="text-lg font-bold text-white mb-1">Starter</h3>
+        <p class="text-sm text-muted mb-6">For individuals getting started.</p>
+        <div class="mb-6">
+          <span class="text-4xl font-extrabold text-white price-val" data-m="0" data-y="0">$0</span>
+          <span class="text-sm text-muted">/month</span>
+        </div>
+        <a href="#" class="btn-ghost text-sm font-semibold text-white text-center py-3 rounded-xl mb-6">Get Started Free</a>
+        <ul class="space-y-3 text-sm text-muted">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Up to 1,000 events/mo</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>3 dashboards</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>7-day data retention</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-dim flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg><span class="text-dim">AI insights</span></li>
+        </ul>
+      </div>
+
+      <!-- Pro (Featured) -->
+      <div class="relative saas-card p-7 flex flex-col ao fs d2" style="border-color:rgba(108,92,231,.35); box-shadow: 0 0 50px -12px rgba(108,92,231,.2);">
+        <div class="absolute -top-px left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent"></div>
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-lg font-bold text-white">Pro</h3>
+          <span class="text-[10px] font-bold tracking-wider uppercase bg-accent/15 text-accent px-2.5 py-1 rounded-full">Popular</span>
+        </div>
+        <p class="text-sm text-muted mb-6">For growing teams that need more.</p>
+        <div class="mb-6">
+          <span class="text-4xl font-extrabold text-white price-val" data-m="29" data-y="23">$29</span>
+          <span class="text-sm text-muted">/month</span>
+        </div>
+        <a href="#" class="btn-glow text-sm font-semibold text-white text-center py-3 rounded-xl mb-6">Start Free Trial</a>
+        <ul class="space-y-3 text-sm text-muted">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Unlimited events</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Unlimited dashboards</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>1-year data retention</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>AI insights & forecasting</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>10 team members</li>
+        </ul>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="saas-card p-7 flex flex-col ao fs d3">
+        <h3 class="text-lg font-bold text-white mb-1">Enterprise</h3>
+        <p class="text-sm text-muted mb-6">For orgs that demand the best.</p>
+        <div class="mb-6">
+          <span class="text-4xl font-extrabold text-white price-val" data-m="99" data-y="79">$99</span>
+          <span class="text-sm text-muted">/month</span>
+        </div>
+        <a href="#" class="btn-ghost text-sm font-semibold text-white text-center py-3 rounded-xl mb-6">Contact Sales</a>
+        <ul class="space-y-3 text-sm text-muted">
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Everything in Pro</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Unlimited retention</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>SSO & SAML</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Dedicated CSM</li>
+          <li class="flex items-center gap-2"><svg class="w-4 h-4 text-mint flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>Custom SLA</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     FINAL CTA
+     ════════════════════════════════════════════ -->
+<section id="cta" class="py-24 md:py-32 px-4 md:px-6 relative overflow-hidden">
+  <!-- Bg orb -->
+  <div class="absolute w-[500px] h-[500px] bg-accent/8 rounded-full blur-[120px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+
+  <div class="max-w-3xl mx-auto text-center relative z-10">
+    <div class="inline-flex items-center gap-2 shimmer border border-border rounded-full px-4 py-1.5 mb-8 ao rise">
+      <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+      <span class="text-xs font-medium text-muted">Join 2,400+ teams already tracking smarter</span>
+    </div>
+
+    <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.04em] leading-[1.08] text-white mb-6 ao rise d1">
+      Ready to see your<br>data <span class="bg-gradient-to-r from-accent via-accent2 to-mint bg-clip-text text-transparent">come alive</span>?
+    </h2>
+    <p class="text-base md:text-lg text-muted leading-relaxed max-w-lg mx-auto mb-10 ao rise d2">
+      Start your 14-day free trial. No credit card required. Set up in under 5 minutes.
+    </p>
+
+    <!-- Email capture -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto ao rise d3">
+      <input type="email" placeholder="you@company.com" class="flex-1 w-full sm:w-auto bg-card border border-border rounded-xl px-5 py-3.5 text-sm text-white placeholder:text-dim focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-all">
+      <a href="#" class="btn-glow text-sm font-semibold text-white px-7 py-3.5 rounded-xl whitespace-nowrap w-full sm:w-auto text-center">Get Started Free</a>
+    </div>
+    <p class="text-xs text-dim mt-4 ao rise d4">Free forever plan available · No credit card needed · GDPR compliant</p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     FOOTER
+     ════════════════════════════════════════════ -->
+<footer class="border-t border-border py-14 px-4 md:px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-14">
+      <!-- Brand -->
+      <div class="col-span-2 md:col-span-2">
+        <a href="#" class="flex items-center gap-2 mb-4">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+          </div>
+          <span class="text-[15px] font-bold tracking-tight text-white">ebws<span class="text-muted">track</span></span>
+        </a>
+        <p class="text-sm text-muted leading-relaxed max-w-xs">Intelligent analytics for modern teams. See what matters, act on what counts.</p>
+      </div>
+      <!-- Product -->
+      <div>
+        <h5 class="text-xs font-bold text-white/60 uppercase tracking-wider mb-4">Product</h5>
+        <ul class="space-y-2.5">
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Features</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Pricing</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Integrations</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Changelog</a></li>
+        </ul>
+      </div>
+      <!-- Company -->
+      <div>
+        <h5 class="text-xs font-bold text-white/60 uppercase tracking-wider mb-4">Company</h5>
+        <ul class="space-y-2.5">
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">About</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Blog</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Careers</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Contact</a></li>
+        </ul>
+      </div>
+      <!-- Legal -->
+      <div>
+        <h5 class="text-xs font-bold text-white/60 uppercase tracking-wider mb-4">Legal</h5>
+        <ul class="space-y-2.5">
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Privacy</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Terms</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">DPA</a></li>
+          <li><a href="#" class="text-sm text-muted hover:text-white transition-colors duration-300">Status</a></li>
+        </ul>
+      </div>
+    </div>
+    <!-- Bottom bar -->
+    <div class="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-xs text-dim">© 2026 ebwstrack. All rights reserved.</p>
+      <div class="flex items-center gap-5">
+        <a href="#" class="text-muted hover:text-white transition-colors duration-300" aria-label="Twitter">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="#" class="text-muted hover:text-white transition-colors duration-300" aria-label="GitHub">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+        <a href="#" class="text-muted hover:text-white transition-colors duration-300" aria-label="LinkedIn">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ════════════════════════════════════════════
+     SCRIPTS
+     ════════════════════════════════════════════ -->
+<script>
+  // Scroll-triggered animations
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+  document.querySelectorAll('.ao').forEach(el => io.observe(el));
+
+  // Pricing toggle
+  let isYearly = false;
+  function togglePricing() {
+    isYearly = !isYearly;
+    const dot = document.getElementById('toggleDot');
+    const toggle = document.getElementById('pricingToggle');
+    const mLabel = document.getElementById('monthLabel');
+    const yLabel = document.getElementById('yearLabel');
+
+    if (isYearly) {
+      dot.style.transform = 'translateX(24px)';
+      toggle.style.background = '#6C5CE7';
+      mLabel.classList.remove('text-white'); mLabel.classList.add('text-muted');
+      yLabel.classList.remove('text-muted'); yLabel.classList.add('text-white');
+    } else {
+      dot.style.transform = 'translateX(0)';
+      toggle.style.background = '#1A1D2B';
+      mLabel.classList.remove('text-muted'); mLabel.classList.add('text-white');
+      yLabel.classList.remove('text-white'); yLabel.classList.add('text-muted');
+    }
+
+    document.querySelectorAll('.price-val').forEach(el => {
+      const v = isYearly ? el.dataset.y : el.dataset.m;
+      el.textContent = '$' + v;
+    });
+  }
+</script>
+
+</body>
+</html>

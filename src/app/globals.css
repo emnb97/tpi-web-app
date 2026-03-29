@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  /* TPI Brand Colors */
+  --color-tpi-teal: #004d4d;
+  --color-tpi-cyan: #00e5ff;
+  
+  /* Setting up modern font weights for strong headings */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Base styles to ensure plenty of white space and clarity */
+@layer base {
+  body {
+    @apply antialiased text-slate-900 bg-white;
+  }
+  
+  h1, h2, h3 {
+    @apply font-bold text-tpi-teal tracking-tight;
+  }
+}
