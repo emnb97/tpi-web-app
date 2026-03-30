@@ -265,10 +265,10 @@ export default function AboutClient() {
           <AnimatedSection className="py-12 md:py-20 border-t border-slate-100">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
               {[
-                { number: cms['about.stat1.number'] || "500+", label: cms['about.stat1.label'] || "Graduates trained" },
-                { number: cms['about.stat2.number'] || "98%", label: cms['about.stat2.label'] || "Employment rate" },
-                { number: cms['about.stat3.number'] || "50+", label: cms['about.stat3.label'] || "Industry partners" },
-                { number: cms['about.stat4.number'] || "5★", label: cms['about.stat4.label'] || "Student rating" },
+                { number: cms['about.stat1.number'] || "100%", label: cms['about.stat1.label'] || "Committed to you" },
+                { number: cms['about.stat2.number'] || "100%", label: cms['about.stat2.label'] || "Prepared for any job" },
+                { number: cms['about.stat3.number'] || "100%", label: cms['about.stat3.label'] || "Professional mentorship" },
+                { number: cms['about.stat4.number'] || "100%", label: cms['about.stat4.label'] || "Professional finish" },
               ].map((stat, i) => (
                 <motion.div 
                   key={stat.label}

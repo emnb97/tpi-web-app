@@ -9,7 +9,7 @@ import {
   RefreshCw, Download, CheckCircle, ChevronRight, AlertCircle,
   Film, Copy, ExternalLink, Clock, UserPlus, Type, Palette,
   Image as ImgIcon, CheckSquare, Phone, FileText, Home, Info, ShoppingBag, GraduationCap, Wrench,
-  BarChart3, TrendingUp, MousePointer2, Gauge, Globe, Zap, Play, Maximize2, Menu
+  BarChart3, TrendingUp, MousePointer2, Gauge, Globe, Zap, Play, Maximize2
 } from "lucide-react";
 import Image from "next/image";
 import * as adminActions from "../actions/admin";
@@ -28,7 +28,6 @@ interface Enquiry {
 interface MediaFile {
   id: number; name: string; type: "Image" | "Video";
   size: string; url: string; date: string; bucket_path: string;
-  category?: string;
 }
 interface StaffMember {
   id: number; name: string; role: "Super Admin" | "Fleet Manager" | "Content Editor";
@@ -172,7 +171,6 @@ interface FontSettings {
 export default function AdminPortal() {
   const [mounted, setMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -209,10 +207,6 @@ export default function AdminPortal() {
     { id: "ORD-9922", customer: "Sarah Jenkins", amount: 55, status: "Pending", date: "2026-02-27", gateway: "PayPal", method: "Credit Card" },
   ]);
 
-  // ── CMS Preview State ──
-  const [previewChanges, setPreviewChanges] = useState<Record<string, string>>({});
-  const [heatmapEnabled, setHeatmapEnabled] = useState(false);
-
   // ── UI ──
   const [productModal, setProductModal] = useState(false);
   const [currentEdit, setCurrentEdit] = useState<Product | null>(null);
@@ -229,6 +223,10 @@ export default function AdminPortal() {
 
   const productImgRef = useRef<HTMLInputElement>(null);
   const mediaUploadRef = useRef<HTMLInputElement>(null);
+
+  // ── CMS Preview State ──────────────────────────────────────────────────────
+  const [previewChanges, setPreviewChanges] = useState<Record<string, string>>({});
+  const [heatmapEnabled, setHeatmapEnabled] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -446,68 +444,31 @@ export default function AdminPortal() {
   const uploadMediaFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
-    
     setMediaUploading(true);
-    let successCount = 0;
-
     for (const file of files) {
       const isVideo = file.type.startsWith("video/");
-      const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const path = `${isVideo ? "videos" : "images"}/${Date.now()}-${cleanName}`;
+      const path = `${isVideo ? "videos" : "images"}/${Date.now()}-${file.name}`;
 
-      // 1. Get Signed URL from Server Action
-      const signRes = await adminActions.createSignedUploadUrl(path);
-      if (signRes.error || !signRes.data) {
-        showToast(`Permission denied: ${file.name}`, "error");
-        continue;
-      }
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("path", path);
 
-      // 2. Direct Client-to-Supabase Upload
-      try {
-        const uploadReq = await fetch(signRes.data.signedUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': file.type
-          },
-          body: file
-        });
+      const resUpload = await adminActions.uploadFile(formData);
+      if (resUpload.error) { showToast(`Failed: ${file.name}`, "error"); continue; }
 
-        if (!uploadReq.ok) throw new Error("Upload failed");
-      } catch (err) {
-        showToast(`Direct upload failed: ${file.name}`, "error");
-        continue;
-      }
-
-      // 3. Save Record to Database
       const record = {
-        name: file.name, 
-        type: isVideo ? "Video" : "Image" as const,
+        name: file.name, type: isVideo ? "Video" : "Image" as const,
         size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-        url: signRes.data.publicUrl, 
-        bucket_path: path,
-        date: new Date().toISOString().split("T")[0],
-        category: isVideo ? "Videos" : "Images"
+        url: resUpload.url, bucket_path: path,
+        date: new Date().toISOString().split("T")[0], category: isVideo ? "Videos" : "Images",
       };
 
       const resDb = await adminActions.saveMediaRecord(record);
-      
-      if (resDb.error) {
-        console.error("Supabase DB Insert Error:", resDb.error);
-        const errorMsg = typeof resDb.error === 'string' ? resDb.error : "Unknown DB Error";
-        showToast(`DB Error: ${errorMsg}`, "error");
-      } else if (resDb.data) {
-        setMediaFiles(prev => [resDb.data as MediaFile, ...prev]);
-        successCount++;
-      }
+      if (resDb.data) setMediaFiles(prev => [resDb.data as MediaFile, ...prev]);
     }
-    
     setMediaUploading(false);
-    
-    if (successCount > 0) {
-      showToast(`${successCount} file${successCount > 1 ? "s" : ""} uploaded successfully`);
-    }
-
-    if (mediaUploadRef.current) mediaUploadRef.current.value = "";
+    showToast(`${files.length} file${files.length > 1 ? "s" : ""} uploaded`);
+    if (e.target) e.target.value = "";
   };
 
   const deleteMedia = async (file: MediaFile) => {
@@ -555,25 +516,8 @@ export default function AdminPortal() {
     showToast("Staff member saved");
   };
 
-  if (!mounted) return null;
+  // ── CMS Preview State Accessors ──────────────────────────────────────────────────
 
-  // ── Dashboard stats ────────────────────────────────────────────────────────
-  const newEnquiries = leads.filter(l => l.status === "New").length;
-  const lowStock = products.filter(p => p.stock < 5).length;
-
-  const nav = [
-    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { id: "inventory", icon: Package, label: "Products" },
-    { id: "enquiries", icon: Mail, label: "Enquiries" },
-    { id: "media", icon: FolderOpen, label: "Media" },
-    { id: "testimonials", icon: Star, label: "Testimonials" },
-    { id: "payments", icon: CreditCard, label: "Payments" },
-    { id: "personnel", icon: Users, label: "Personnel" },
-    { id: "cms", icon: Settings, label: "CMS" },
-    { id: "analytics", icon: BarChart3, label: "Analytics" },
-  ];
-
-  // ── CMS Preview Helper Functions ──────────────────────────────────────────
   // Get preview value (unsaved changes take precedence)
   const getPreviewValue = (id: string, originalContent: string) => {
     return previewChanges[id] !== undefined ? previewChanges[id] : originalContent;
@@ -611,7 +555,26 @@ export default function AdminPortal() {
   const currentPageContent = siteContent.filter(c => c.page === cmsActivePage);
   const sections = Array.from(new Set(currentPageContent.map(c => c.section)));
 
-  // ── LOGIN ──────────────────────────────────────────────────────────────────
+  // ── Dashboard stats ────────────────────────────────────────────────────────
+  const newEnquiries = leads.filter(l => l.status === "New").length;
+  const lowStock = products.filter(p => p.stock < 5).length;
+
+  const nav = [
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { id: "inventory", icon: Package, label: "Products" },
+    { id: "enquiries", icon: Mail, label: "Enquiries" },
+    { id: "media", icon: FolderOpen, label: "Media" },
+    { id: "testimonials", icon: Star, label: "Testimonials" },
+    { id: "payments", icon: CreditCard, label: "Payments" },
+    { id: "personnel", icon: Users, label: "Personnel" },
+    { id: "cms", icon: Settings, label: "CMS" },
+    { id: "analytics", icon: BarChart3, label: "Analytics" },
+  ];
+
+  // ── REPAIRED CONDITIONAL RETURNS (Now correctly placed below all Hooks) ─────
+
+  if (!mounted) return null;
+
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-[#0D1117] flex items-center justify-center p-6">
@@ -669,28 +632,12 @@ export default function AdminPortal() {
     );
   }
 
-  // ── DASHBOARD ──────────────────────────────────────────────────────────────
+  // ── MAIN PORTAL RENDER ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#090C10] text-white flex overflow-x-hidden">
-
-      {/* Mobile Nav Overlay */}
-      {mobileNavOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black/60 z-[40]"
-          onClick={() => setMobileNavOpen(false)}
-        />
-      )}
-
-      {/* Mobile Hamburger Button */}
-      <button 
-        className="lg:hidden fixed top-4 right-4 z-[60] p-2.5 bg-[#0D1117] border border-white/10 rounded-lg text-white shadow-xl"
-        onClick={() => setMobileNavOpen(!mobileNavOpen)}
-      >
-        {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+    <div className="min-h-screen bg-[#090C10] text-white flex">
 
       {/* Sidebar */}
-      <aside className={`w-52 h-screen bg-[#0D1117] border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-50 transform transition-transform duration-300 ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className="w-52 h-screen bg-[#0D1117] border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-50">
         <div className="p-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
             <div className="relative w-6 h-6 shrink-0"><Image src="/tpilogo.png" alt="TPI" fill sizes="24px" className="object-contain" /></div>
@@ -702,7 +649,7 @@ export default function AdminPortal() {
         </div>
         <nav className="flex-grow p-2.5 space-y-0.5 overflow-y-auto">
           {nav.map(item => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
+            <button key={item.id} onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left group ${activeTab === item.id ? "bg-[#0072CE]/15 text-[#4BA3E3]" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}>
               <item.icon size={13} strokeWidth={1.75} />
               <span className="flex-grow">{item.label}</span>
@@ -719,7 +666,7 @@ export default function AdminPortal() {
       </aside>
 
       {/* Main */}
-      <main className="flex-grow lg:ml-52 p-4 md:p-8 min-h-screen overflow-auto w-full overflow-x-hidden pt-20 lg:pt-8">
+      <main className="flex-grow ml-52 p-8 min-h-screen overflow-auto">
 
         {/* ── DASHBOARD ───────────────────────────────────────────────── */}
         {activeTab === "dashboard" && (
@@ -1550,64 +1497,53 @@ export default function AdminPortal() {
               </div>
             </div>
 
-            {/* Heatmap Toggle */}
+            {/* Microsoft Clarity Integration */}
             <div className={`${card} p-6`}>
-              <div className="flex items-center justify-between">
+              {hasUnsavedChanges && previewChanges['settings.analytics.clarity_id'] !== undefined && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <AlertCircle size={18} className="text-amber-400" />
+                    <span className="text-amber-300 text-sm font-medium">Unsaved Clarity Project ID change</span>
+                  </div>
+                  <button onClick={saveAllChanges} className={btnPrimary}>
+                    <CheckCircle size={13} /> Save Change
+                  </button>
+                </motion.div>
+              )}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500/20 via-yellow-500/20 to-green-500/20 flex items-center justify-center">
-                    <MousePointer2 size={22} className="text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <MousePointer2 size={22} className="text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">Engagement Heatmap</h3>
+                    <h3 className="text-white font-semibold">Microsoft Clarity Integration</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Visualize where users click and scroll on your site
+                      Enable session recordings and heatmaps by entering your Project ID
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setHeatmapEnabled(!heatmapEnabled);
-                    showToast(heatmapEnabled ? "Heatmap disabled" : "Heatmap enabled — visit your site to see engagement data");
-                  }}
-                  className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
-                    heatmapEnabled 
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
-                      : "bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10"
-                  }`}
-                >
-                  {heatmapEnabled ? (
-                    <span className="flex items-center gap-2"><Eye size={16} /> Heatmap Active</span>
-                  ) : (
-                    <span className="flex items-center gap-2"><EyeOff size={16} /> Enable Heatmap</span>
-                  )}
-                </button>
-              </div>
-              
-              {heatmapEnabled && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-6 pt-6 border-t border-white/10"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Most Clicked</p>
-                      <p className="text-white font-semibold">&quot;Explore Courses&quot; Button</p>
-                      <p className="text-emerald-400 text-xs mt-1">324 clicks this week</p>
-                    </div>
-                    <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Avg. Scroll Depth</p>
-                      <p className="text-white font-semibold">68% of page</p>
-                      <p className="text-blue-400 text-xs mt-1">+5% from last week</p>
-                    </div>
-                    <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Rage Clicks</p>
-                      <p className="text-white font-semibold">3 detected</p>
-                      <p className="text-amber-400 text-xs mt-1">Nav menu on mobile</p>
+                <div className="w-full md:w-72 space-y-1.5">
+                  <label className={label}>Project ID</label>
+                  <div className="relative">
+                    <input 
+                      className={inputCls}
+                      placeholder="e.g. m5l8p7x9z2"
+                      value={getPreviewValue('settings.analytics.clarity_id', siteContent.find(c => c.id === 'settings.analytics.clarity_id')?.content || '')}
+                      onChange={(e) => updatePreview('settings.analytics.clarity_id', e.target.value)}
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1.5">
+                      {siteContent.find(c => c.id === 'settings.analytics.clarity_id')?.content && (
+                        <CheckCircle size={14} className="text-emerald-500" />
+                      )}
                     </div>
                   </div>
-                </motion.div>
-              )}
+                </div>
+              </div>
+
             </div>
 
             {/* SEO Checklist */}

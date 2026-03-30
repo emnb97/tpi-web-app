@@ -24,7 +24,6 @@ interface NavbarProps {
 export default function Navbar({ onCartOpen }: NavbarProps) {
   const [navVisible, setNavVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [logoFlipped, setLogoFlipped] = useState(false);
   const { itemCount } = useCart();
   const { scrollY } = useScroll();
   const logoOpacity = useTransform(scrollY, [100, 300], [1, 0]);
@@ -32,9 +31,7 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
 
   // Filter out the current page from nav items
   const filteredNavItems = navItems.filter(item => {
-    // Exact match for home
     if (item.href === "/" && pathname === "/") return false;
-    // For other pages, check if current path starts with the nav item href
     if (item.href !== "/" && pathname.startsWith(item.href)) return false;
     return true;
   });
@@ -48,37 +45,21 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
     }
   });
 
-  // Toggle logo flip on touch for mobile
-  const handleLogoTouch = () => {
-    setLogoFlipped(!logoFlipped);
-  };
-
   return (
     <>
-      {/* Top-left logo flip - with touch support for mobile */}
+      {/* Top-left logo flip - PURE CSS APPROACH FOR HOVER/TAP */}
       <Link href="/" aria-label="The Physical Internet — Home">
         <motion.div
           style={{ opacity: logoOpacity }}
-          className="fixed top-2 left-4 md:left-10 z-[1000] w-28 h-28 md:w-48 md:h-48 cursor-pointer"
-          onClick={handleLogoTouch}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            handleLogoTouch();
-          }}
+          className="fixed top-2 left-4 md:left-10 z-[1000] w-28 h-28 md:w-48 md:h-48 cursor-pointer group [perspective:2000px]"
         >
-          <div className="relative w-full h-full [perspective:2000px]">
-            <motion.div 
-              className="relative w-full h-full [transform-style:preserve-3d]"
-              animate={{ rotateY: logoFlipped ? 180 : 0 }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            >
-              <div className="absolute inset-0 [backface-visibility:hidden]">
-                <Image src="/tpilogo.png" alt="TPI Logo" fill className="object-contain" priority sizes="(max-width: 768px) 112px, 192px" />
-              </div>
-              <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                <Image src="/tpilogo2.png" alt="TPI Logo Alt" fill className="object-contain" priority sizes="(max-width: 768px) 112px, 192px" />
-              </div>
-            </motion.div>
+          <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] md:group-hover:[transform:rotateY(180deg)] group-active:[transform:rotateY(180deg)]">
+            <div className="absolute inset-0 [backface-visibility:hidden]">
+              <Image src="/tpilogo.png" alt="TPI Logo" fill className="object-contain" priority sizes="(max-width: 768px) 112px, 192px" />
+            </div>
+            <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+              <Image src="/tpilogo2.png" alt="TPI Logo Alt" fill className="object-contain" priority sizes="(max-width: 768px) 112px, 192px" />
+            </div>
           </div>
         </motion.div>
       </Link>
@@ -145,10 +126,17 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 <X size={20} className="text-[#002D72]" />
               </button>
 
-              {/* Logo in menu */}
+              {/* Logo in menu (also flips now!) */}
               <div className="pt-20 px-8">
-                <div className="relative w-24 h-24 mb-8">
-                  <Image src="/tpilogo.png" alt="TPI" fill className="object-contain" sizes="96px" />
+                <div className="relative w-24 h-24 mb-8 group [perspective:2000px] cursor-pointer">
+                  <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] active:[transform:rotateY(180deg)] md:group-hover:[transform:rotateY(180deg)]">
+                    <div className="absolute inset-0 [backface-visibility:hidden]">
+                      <Image src="/tpilogo.png" alt="TPI" fill className="object-contain" sizes="96px" />
+                    </div>
+                    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                      <Image src="/tpilogo2.png" alt="TPI Alt" fill className="object-contain" sizes="96px" />
+                    </div>
+                  </div>
                 </div>
               </div>
 

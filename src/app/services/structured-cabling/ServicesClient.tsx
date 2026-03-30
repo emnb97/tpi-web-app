@@ -25,6 +25,7 @@ interface Service {
 
 export default function ServicesClient() {
   const [mounted, setMounted] = useState(false);
+  const [cmsLoaded, setCmsLoaded] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [cms, setCms] = useState<Record<string, string>>({});
   const [services, setServices] = useState<Service[]>([]);
@@ -32,19 +33,38 @@ export default function ServicesClient() {
   useEffect(() => {
     setMounted(true);
     async function loadData() {
-      const [cmsData, servicesData] = await Promise.all([getSiteContent(), getServices()]);
-      const mapping = cmsData.reduce((acc: any, curr: any) => ({ ...acc, [curr.id]: curr.content }), {});
-      setCms(mapping);
-      setServices((servicesData as Service[]).filter(s => s.visible !== false));
+      try {
+        const [cmsData, servicesData] = await Promise.all([getSiteContent(), getServices()]);
+        const mapping = cmsData.reduce((acc: any, curr: any) => ({ ...acc, [curr.id]: curr.content }), {});
+        setCms(mapping);
+        setServices((servicesData as Service[]).filter(s => s.visible !== false));
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setCmsLoaded(true);
+      }
     }
     loadData();
   }, []);
 
-  if (!mounted) return null;
+  // Show loading state until both mounted and CMS loaded
+  if (!mounted || !cmsLoaded) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative w-24 h-24 mx-auto mb-6">
+            <div className="absolute inset-0 border-4 border-[#002D72]/20 rounded-full" />
+            <div className="absolute inset-0 border-4 border-transparent border-t-[#0072CE] rounded-full animate-spin" />
+          </div>
+          <p className="text-[#002D72] font-bold text-sm uppercase tracking-widest">Loading</p>
+        </div>
+      </div>
+    );
+  }
 
   const stats = [
-    { value: cms['services.stat1.value'] || "100+", label: cms['services.stat1.label'] || "Projects completed" },
-    { value: cms['services.stat2.value'] || "5★", label: cms['services.stat2.label'] || "Client satisfaction" },
+    { value: cms['services.stat1.value'] || "100%", label: cms['services.stat1.label'] || "Client satisfaction" },
+    { value: cms['services.stat2.value'] || "5★", label: cms['services.stat2.label'] || "Reviews online" },
     { value: cms['services.stat3.value'] || "UK-wide", label: cms['services.stat3.label'] || "Coverage" },
     { value: cms['services.stat4.value'] || "BS EN", label: cms['services.stat4.label'] || "Standards compliant" },
   ];

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, MapPin, Calendar, Instagram, Mail, ChevronDown, Plus, Minus, Phone } from "lucide-react";
+import { ArrowRight, MapPin, Calendar, Instagram, Mail, ChevronDown, Plus, Minus, Phone, Volume2, VolumeX } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import BackgroundWires from "./components/BackgroundWires";
@@ -125,8 +125,6 @@ const ParallaxCourse = ({ number, title, description, image, offset }: ParallaxC
     target: ref,
     offset: ["start end", "end start"]
   });
-  // Disable parallax on mobile by using a media query or checking window size, 
-  // but framer-motion handles clamping gracefully. We reduce offset effect for smaller screens.
   const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
 
   return (
@@ -194,6 +192,11 @@ export default function HomePage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cms, setCms] = useState<Record<string, string>>({});
   const [openAccordion, setOpenAccordion] = useState<number | null>(0);
+  
+  // Audio State Management
+  const [heroMuted, setHeroMuted] = useState(true);
+  const [actionMuted, setActionMuted] = useState(true);
+  
   const heroVideoRef = useRef<HTMLVideoElement>(null);
   const actionVideoRef = useRef<HTMLVideoElement>(null);
   const masterCraftRef = useRef<HTMLDivElement>(null);
@@ -230,6 +233,25 @@ export default function HomePage() {
     if (actionVideoRef.current) observer.observe(actionVideoRef.current);
     return () => observer.disconnect();
   }, []);
+
+  // Robust Unmute Handlers
+  const toggleHeroMute = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (heroVideoRef.current) {
+      heroVideoRef.current.muted = !heroMuted;
+      setHeroMuted(!heroMuted);
+    }
+  };
+
+  const toggleActionMute = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (actionVideoRef.current) {
+      actionVideoRef.current.muted = !actionMuted;
+      setActionMuted(!actionMuted);
+    }
+  };
 
   // Show loading state until both mounted and CMS loaded
   if (!mounted || !cmsLoaded) {
@@ -368,15 +390,34 @@ export default function HomePage() {
                 transition={{ duration: 0.8, ease: "circOut" }} 
                 className="relative w-full aspect-[4/5] overflow-hidden rounded-[1.8rem] md:rounded-[3.8rem]"
               >
-                <video autoPlay 
+                <video 
+                  autoPlay 
                   ref={heroVideoRef} 
                   loop 
-                  muted 
+                  muted={heroMuted} 
                   playsInline 
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full object-cover grayscale-[0.1] group-hover:grayscale-0 transition-all duration-1000"
                 >
                   <source src={cms['home.hero.video'] || "/tpihero.mp4"} type="video/mp4" />
                 </video>
+                
+                {/* Responsive Audio Toggle Overlay */}
+                <button
+                  onClick={toggleHeroMute}
+                  className="absolute bottom-6 right-6 z-20 flex items-center gap-2 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white px-4 py-2.5 rounded-full border border-white/20 transition-all cursor-pointer shadow-xl"
+                  aria-label={heroMuted ? "Unmute video" : "Mute video"}
+                >
+                  {heroMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  <span className="text-[10px] md:text-xs font-black uppercase tracking-widest font-genos mt-0.5">
+                    {heroMuted ? (
+                      <>
+                        <span className="md:hidden">Tap to unmute</span>
+                        <span className="hidden md:inline">Click to unmute</span>
+                      </>
+                    ) : "Mute sound"}
+                  </span>
+                </button>
+
               </motion.div>
             </motion.div>
           </div>
@@ -443,14 +484,14 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="rounded-[1.5rem] md:rounded-[3rem] shadow-2xl border border-slate-200 bg-slate-900 max-w-5xl mx-auto overflow-hidden"
+              className="rounded-[1.5rem] md:rounded-[3rem] shadow-2xl border border-slate-200 bg-slate-900 max-w-5xl mx-auto overflow-hidden relative"
             >
               <div className="relative aspect-video">
                 <video  
                   ref={actionVideoRef} 
                   autoPlay
                   loop 
-                  muted 
+                  muted={actionMuted} 
                   playsInline
                   webkit-playsinline="true"
                   preload="auto"
@@ -460,6 +501,23 @@ export default function HomePage() {
                 </video>
                 {/* Overlay gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#002D72]/20 to-transparent pointer-events-none" />
+                
+                {/* Responsive Audio Toggle Overlay */}
+                <button
+                  onClick={toggleActionMute}
+                  className="absolute bottom-6 right-6 z-20 flex items-center gap-2 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white px-4 py-2.5 rounded-full border border-white/20 transition-all cursor-pointer shadow-xl"
+                  aria-label={actionMuted ? "Unmute video" : "Mute video"}
+                >
+                  {actionMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                  <span className="text-[10px] md:text-xs font-black uppercase tracking-widest font-genos mt-0.5">
+                    {actionMuted ? (
+                      <>
+                        <span className="md:hidden">Tap to unmute</span>
+                        <span className="hidden md:inline">Click to unmute</span>
+                      </>
+                    ) : "Mute sound"}
+                  </span>
+                </button>
               </div>
             </motion.div>
           </div>
@@ -497,13 +555,13 @@ export default function HomePage() {
           </AnimatedHeader>
         </section>
 
-        {/* GET INVOLVED - MAP SECTION */}
+        {/* GET INVOLVED - MAP SECTION (CMS DYNAMIC MAP ADDED HERE) */}
         <section className="py-16 md:py-32 px-4 md:px-8 max-w-[1400px] mx-auto relative z-10">
           <div className="bg-white rounded-[2rem] md:rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden font-genos">
             <div className="p-6 md:p-12 border-b border-slate-50 flex items-center justify-between flex-wrap gap-4 md:gap-6">
               <div className="flex items-center gap-4 md:gap-10">
-                <div className="relative w-16 h-16 md:w-32 md:h-32 group [perspective:2000px] z-50">
-                  <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                <div className="relative w-16 h-16 md:w-32 md:h-32 group [perspective:2000px] z-50 cursor-pointer">
+                  <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] md:group-hover:[transform:rotateY(180deg)] group-active:[transform:rotateY(180deg)]">
                     <div className="absolute inset-0 [backface-visibility:hidden]">
                       <Image src="/tpilogo.png" alt="TPI" fill className="object-contain" sizes="128px" />
                     </div>
@@ -549,12 +607,13 @@ export default function HomePage() {
               </div>
               <div className="col-span-1 md:col-span-12 lg:col-span-7 h-[400px] md:h-[600px] relative grayscale hover:grayscale-0 transition-all duration-1000">
                 <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d158858.47340003058!2d-0.24168147910967396!3d51.52855824174697!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47d8a00baf21de75%3A0x52963a5addd52a99!2sLondon!5e0!3m2!1sen!2suk!4v1700000000000!5m2!1sen!2suk" 
+                  src={cms['home.event.map_url'] || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2482.684156689658!2d-0.08620242337651056!3d51.52358897181745!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48761caf15d5e2a3%3A0xc47eeb6280db5de1!2sPaul%20St%2C%20London%20EC2A%204NE!5e0!3m2!1sen!2suk!4v1700000000000!5m2!1sen!2suk"}
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 
                   allowFullScreen 
                   loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
                   title="TPI London location" 
                   className="absolute inset-0 w-full h-full object-cover" 
                 />

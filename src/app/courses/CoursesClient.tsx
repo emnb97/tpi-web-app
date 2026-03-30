@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle2, Calendar, MapPin, Zap, Shield, Play, Star, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Calendar, MapPin, Zap, Shield, Star, X } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BackgroundWires from "../components/BackgroundWires";
@@ -364,11 +364,6 @@ export default function CoursesClient() {
             <div className="col-span-12 lg:col-span-6 relative aspect-square rounded-[2rem] md:rounded-[4rem] overflow-hidden border-4 md:border-8 border-white/5">
               <Image src={cms['courses.why.image'] || "/coursehero.png"} alt="TPI training in action" fill className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#002D72]/60 to-transparent" />
-              <button className="absolute inset-0 flex items-center justify-center group" aria-label="Play training video">
-                <div className="w-16 h-16 md:w-24 md:h-24 bg-[#00A651] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl shadow-[#00A651]/40">
-                  <Play size={24} className="fill-white text-white ml-1 md:ml-2" />
-                </div>
-              </button>
             </div>
           </div>
         </section>
