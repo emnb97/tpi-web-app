@@ -40,6 +40,7 @@ export default function ContactClient() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => {
@@ -78,19 +79,44 @@ export default function ContactClient() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /* ── Netlify-compliant form submission ─────────────────────────────────
+     Encodes the form data as x-www-form-urlencoded and POSTs it to the
+     current page. Netlify intercepts requests with the matching
+     "form-name" field and routes them to the Forms dashboard.            */
+  const encode = (data: Record<string, string>) =>
+    Object.entries(data)
+      .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+      .join("&");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission - replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch("/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: encode({
+          "form-name": "contact",
+          ...formData,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Form submission failed");
+      
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error("Submission error:", error);
+      setSubmitError("Something went wrong. Please try again or email us directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
     setIsSubmitted(false);
+    setSubmitError(null);
     setFormData({
       name: "",
       company: "",
@@ -105,6 +131,29 @@ export default function ContactClient() {
       <BackgroundWires />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <Navbar onCartOpen={() => setCartOpen(true)} />
+
+      {/* ── HIDDEN STATIC FORM FOR NETLIFY BOT DETECTION ─────────────────
+           Netlify's build-time bot scans the HTML for forms with
+           data-netlify="true". Because the real form is rendered by
+           React at runtime, the bot never sees it. This invisible
+           static version ensures Netlify registers the form and
+           creates the "contact" form endpoint in the dashboard.
+           
+           Field names MUST match the JS form exactly.                    */}
+      <form
+        name="contact"
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+        hidden
+      >
+        <input type="hidden" name="form-name" value="contact" />
+        <input type="hidden" name="bot-field" />
+        <input type="text" name="name" />
+        <input type="text" name="company" />
+        <input type="tel" name="phone" />
+        <input type="email" name="email" />
+        <textarea name="message" />
+      </form>
 
       <main className="bg-white min-h-screen pt-32 md:pt-40 px-4 md:px-8 font-genos relative z-10 flex-grow mb-[75vh]">
         <div className="max-w-[1400px] mx-auto">
@@ -153,8 +202,21 @@ export default function ContactClient() {
                       initial={{ opacity: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       onSubmit={handleSubmit}
+                      name="contact"
+                      method="POST"
+                      data-netlify="true"
+                      netlify-honeypot="bot-field"
                       className="p-6 md:p-14"
                     >
+                      {/* Netlify required hidden fields */}
+                      <input type="hidden" name="form-name" value="contact" />
+                      <p className="hidden">
+                        <label>
+                          Don&apos;t fill this out if you&apos;re human:
+                          <input name="bot-field" />
+                        </label>
+                      </p>
+
                       <div className="space-y-8">
                         {/* Name & Company Row */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -275,6 +337,17 @@ export default function ContactClient() {
                           />
                         </div>
                       </div>
+
+                      {/* Error message */}
+                      {submitError && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm font-medium text-center"
+                        >
+                          {submitError}
+                        </motion.div>
+                      )}
 
                       {/* Submit Button */}
                       <motion.button
