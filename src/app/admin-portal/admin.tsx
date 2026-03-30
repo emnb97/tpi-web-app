@@ -9,7 +9,7 @@ import {
   RefreshCw, Download, CheckCircle, ChevronRight, AlertCircle,
   Film, Copy, ExternalLink, Clock, UserPlus, Type, Palette,
   Image as ImgIcon, CheckSquare, Phone, FileText, Home, Info, ShoppingBag, GraduationCap, Wrench,
-  BarChart3, TrendingUp, MousePointer2, Gauge, Globe, Zap, Play, Maximize2
+  BarChart3, TrendingUp, MousePointer2, Gauge, Globe, Zap, Play, Maximize2, Menu
 } from "lucide-react";
 import Image from "next/image";
 import * as adminActions from "../actions/admin";
@@ -220,6 +220,7 @@ export default function AdminPortal() {
   const [staffModal, setStaffModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const productImgRef = useRef<HTMLInputElement>(null);
   const mediaUploadRef = useRef<HTMLInputElement>(null);
@@ -577,7 +578,7 @@ export default function AdminPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#0D1117] flex items-center justify-center p-6">
+      <div className="h-screen w-screen overflow-hidden fixed inset-0 bg-[#0D1117] flex items-center justify-center p-6">
         <div className="w-full max-w-sm flex flex-col items-center">
           
           {/* LARGE FLIPPING LOGO */}
@@ -634,22 +635,30 @@ export default function AdminPortal() {
 
   // ── MAIN PORTAL RENDER ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#090C10] text-white flex">
+    <div className="h-screen w-screen overflow-hidden bg-[#090C10] text-white flex fixed inset-0">
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
 
       {/* Sidebar */}
-      <aside className="w-52 h-screen bg-[#0D1117] border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-50">
+      <aside className={`w-52 h-screen bg-[#0D1117] border-r border-white/[0.06] flex flex-col fixed left-0 top-0 z-50 transition-transform duration-200 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
         <div className="p-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <div className="relative w-6 h-6 shrink-0"><Image src="/tpilogo.png" alt="TPI" fill sizes="24px" className="object-contain" /></div>
-            <div>
-              <p className="text-xs font-semibold text-white leading-none">TPI Admin</p>
-              <p className="text-[10px] text-slate-600 mt-0.5">Management portal</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="relative w-6 h-6 shrink-0"><Image src="/tpilogo.png" alt="TPI" fill sizes="24px" className="object-contain" /></div>
+              <div>
+                <p className="text-xs font-semibold text-white leading-none">TPI Admin</p>
+                <p className="text-[10px] text-slate-600 mt-0.5">Management portal</p>
+              </div>
             </div>
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1.5 rounded-lg hover:bg-white/5 text-slate-500 transition-colors"><X size={15} /></button>
           </div>
         </div>
         <nav className="flex-grow p-2.5 space-y-0.5 overflow-y-auto">
           {nav.map(item => (
-            <button key={item.id} onClick={() => setActiveTab(item.id)}
+            <button key={item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left group ${activeTab === item.id ? "bg-[#0072CE]/15 text-[#4BA3E3]" : "text-slate-500 hover:text-slate-200 hover:bg-white/5"}`}>
               <item.icon size={13} strokeWidth={1.75} />
               <span className="flex-grow">{item.label}</span>
@@ -666,7 +675,15 @@ export default function AdminPortal() {
       </aside>
 
       {/* Main */}
-      <main className="flex-grow ml-52 p-8 min-h-screen overflow-auto">
+      <main className="flex-grow lg:ml-52 h-screen overflow-auto">
+        {/* Mobile top bar */}
+        <div className="sticky top-0 z-30 bg-[#090C10]/95 backdrop-blur-sm border-b border-white/[0.06] px-4 py-3 flex items-center gap-3 lg:hidden">
+          <button onClick={() => setSidebarOpen(true)} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 transition-colors">
+            <Menu size={18} />
+          </button>
+          <p className="text-xs font-semibold text-white">{nav.find(n => n.id === activeTab)?.label}</p>
+        </div>
+        <div className="p-4 sm:p-6 lg:p-8">
 
         {/* ── DASHBOARD ───────────────────────────────────────────────── */}
         {activeTab === "dashboard" && (
@@ -1635,6 +1652,7 @@ export default function AdminPortal() {
           </div>
         )}
 
+        </div>
       </main>
 
       {/* ── PRODUCT MODAL ─────────────────────────────────────────────────── */}

@@ -126,10 +126,10 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 <X size={20} className="text-[#002D72]" />
               </button>
 
-              {/* Logo in menu (also flips now!) */}
+              {/* Logo in menu - Updated for tap flip */}
               <div className="pt-20 px-8">
                 <div className="relative w-24 h-24 mb-8 group [perspective:2000px] cursor-pointer">
-                  <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] active:[transform:rotateY(180deg)] md:group-hover:[transform:rotateY(180deg)]">
+                  <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] group-active:[transform:rotateY(180deg)] md:group-hover:[transform:rotateY(180deg)]">
                     <div className="absolute inset-0 [backface-visibility:hidden]">
                       <Image src="/tpilogo.png" alt="TPI" fill className="object-contain" sizes="96px" />
                     </div>
