@@ -84,34 +84,36 @@ export default function ContactClient() {
     setSubmitError(null);
 
     try {
+      // 1. Save to Supabase (admin portal) — this is the primary data store
+      const supabaseRes = await submitEnquiry({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        message: formData.message,
+      });
+
+      // 2. Also try Netlify Forms (fire-and-forget — don't let it block success)
       const myForm = e.currentTarget;
       const netlifyData = new FormData(myForm);
-
       const params = new URLSearchParams();
       netlifyData.forEach((value, key) => {
         params.append(key, value as string);
       });
 
-      // Submit to BOTH Netlify Forms and Supabase (admin portal) in parallel
-      const [netlifyRes, supabaseRes] = await Promise.all([
-        fetch("/__forms.html", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: params.toString(),
-        }),
-        submitEnquiry({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          company: formData.company,
-          message: formData.message,
-        }),
-      ]);
+      fetch("/__forms.html", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString(),
+      }).catch(() => {
+        // Netlify form submission is optional — Supabase is the source of truth
+        console.log("Netlify Forms POST failed (non-critical)");
+      });
 
-      if (netlifyRes.status === 200 || supabaseRes.success) {
+      if (supabaseRes.success) {
         setIsSubmitted(true);
       } else {
-        setSubmitError(`Submission failed (${netlifyRes.status}). Please try again or email us directly.`);
+        setSubmitError("Submission failed. Please try again or email us directly.");
       }
     } catch (error) {
       console.error("Submission error:", error);
