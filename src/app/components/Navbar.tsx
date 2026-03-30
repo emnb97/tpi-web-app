@@ -24,6 +24,7 @@ interface NavbarProps {
 export default function Navbar({ onCartOpen }: NavbarProps) {
   const [navVisible, setNavVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoFlipped, setLogoFlipped] = useState(false);
   const { itemCount } = useCart();
   const { scrollY } = useScroll();
   const logoOpacity = useTransform(scrollY, [100, 300], [1, 0]);
@@ -47,13 +48,17 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
 
   return (
     <>
-      {/* Top-left logo flip - PURE CSS APPROACH FOR HOVER/TAP */}
+      {/* Top-left logo flip - CSS hover on desktop, tap toggle on mobile */}
       <Link href="/" aria-label="The Physical Internet — Home">
         <motion.div
           style={{ opacity: logoOpacity }}
           className="fixed top-2 left-4 md:left-10 z-[1000] w-28 h-28 md:w-48 md:h-48 cursor-pointer group [perspective:2000px]"
+          onTouchStart={(e) => { e.stopPropagation(); setLogoFlipped(f => !f); }}
         >
-          <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] md:group-hover:[transform:rotateY(180deg)] group-active:[transform:rotateY(180deg)]">
+          <div
+            className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] md:group-hover:[transform:rotateY(180deg)]"
+            style={logoFlipped ? { transform: "rotateY(180deg)" } : undefined}
+          >
             <div className="absolute inset-0 [backface-visibility:hidden]">
               <Image src="/tpilogo.png" alt="TPI Logo" fill className="object-contain" priority sizes="(max-width: 768px) 112px, 192px" />
             </div>
@@ -126,10 +131,17 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 <X size={20} className="text-[#002D72]" />
               </button>
 
-              {/* Logo in menu - Updated for tap flip */}
+              {/* Logo in menu - tap to flip */}
               <div className="pt-20 px-8">
-                <div className="relative w-24 h-24 mb-8 group [perspective:2000px] cursor-pointer">
-                  <div className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] group-active:[transform:rotateY(180deg)] md:group-hover:[transform:rotateY(180deg)]">
+                <div
+                  className="relative w-24 h-24 mb-8 [perspective:2000px] cursor-pointer"
+                  onTouchStart={() => setLogoFlipped(f => !f)}
+                  onClick={() => setLogoFlipped(f => !f)}
+                >
+                  <div
+                    className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d]"
+                    style={logoFlipped ? { transform: "rotateY(180deg)" } : undefined}
+                  >
                     <div className="absolute inset-0 [backface-visibility:hidden]">
                       <Image src="/tpilogo.png" alt="TPI" fill className="object-contain" sizes="96px" />
                     </div>
