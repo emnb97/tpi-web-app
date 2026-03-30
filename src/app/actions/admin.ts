@@ -4,8 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 
 // --- DYNAMIC ADMIN CLIENT ---
-// Instantiating this inside a getter function ensures process.env 
-// is read at execution time, preventing "undefined" caching bugs.
 const getSupabaseAdmin = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -18,7 +16,7 @@ const getSupabaseAdmin = () => {
   return createClient(url || "", key || "", {
     auth: {
       autoRefreshToken: false,
-      persistSession: false // Crucial for server-side admin clients
+      persistSession: false
     }
   });
 };
@@ -170,14 +168,12 @@ export async function createSignedUploadUrl(path: string) {
   try {
     const BUCKET_NAME = 'tpi-media';
     
-    // 1. Ask Supabase for a signed upload URL using the service key
     const { data, error } = await supabase.storage
       .from(BUCKET_NAME)
       .createSignedUploadUrl(path);
 
     if (error) throw error;
 
-    // 2. Pre-generate what the public URL will be once the upload finishes
     const { data: urlData } = supabase.storage
       .from(BUCKET_NAME)
       .getPublicUrl(path);
@@ -216,7 +212,7 @@ export async function uploadFile(formData: FormData) {
   }
 }
 
-// --- ADDITIONAL DATA FETCHERS ---
+// --- ENQUIRY ACTIONS ---
 export async function getEnquiries() {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase.from("enquiries").select("*").order("date", { ascending: false });
@@ -229,6 +225,39 @@ export async function updateLeadStatus(id: number, status: string) {
   return { success: !error };
 }
 
+// --- SUBMIT ENQUIRY (called from Contact form) ---
+export async function submitEnquiry(data: {
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  message: string;
+}) {
+  const supabase = getSupabaseAdmin();
+  try {
+    const { error } = await supabase.from("enquiries").insert({
+      name: data.name,
+      email: data.email,
+      phone: data.phone || "",
+      type: data.company ? `Contact — ${data.company}` : "Contact Form",
+      message: data.message,
+      status: "New",
+      date: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("submitEnquiry error:", err);
+    return { success: false, error: "Server error" };
+  }
+}
+
+// --- MEDIA ACTIONS ---
 export async function getMedia() {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase.from("media_files").select("*").order("date", { ascending: false });
@@ -256,6 +285,7 @@ export async function deleteFile(path: string) {
   return { success: !error };
 }
 
+// --- TESTIMONIAL ACTIONS ---
 export async function getTestimonials() {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase.from("testimonials").select("*").order("date", { ascending: false });

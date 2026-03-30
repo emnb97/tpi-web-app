@@ -9,7 +9,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BackgroundWires from "../components/BackgroundWires";
 import CartSidebar from "../components/CartSidebar";
-import { getSiteContent } from "../actions/admin";
+import { getSiteContent, submitEnquiry } from "../actions/admin";
 
 // TikTok Icon Component
 const TikTokIcon = ({ size = 24 }: { size?: number }) => (
@@ -18,7 +18,7 @@ const TikTokIcon = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 
-interface FormData {
+interface ContactFormData {
   name: string;
   company: string;
   phone: string;
@@ -31,7 +31,7 @@ export default function ContactClient() {
   const [cmsLoaded, setCmsLoaded] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [cms, setCms] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     company: "",
     phone: "",
@@ -59,7 +59,6 @@ export default function ContactClient() {
     loadCms();
   }, []);
 
-  // Show loading state until both mounted and CMS loaded
   if (!mounted || !cmsLoaded) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
@@ -79,27 +78,41 @@ export default function ContactClient() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  /* ── Netlify-compliant form submission ─────────────────────────────────
-     Uses FormData from the actual form element so all hidden fields
-     (form-name, bot-field) are automatically captured. POSTs to the
-     static __forms.html file in /public that Netlify intercepts.         */
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      const form = e.currentTarget;
-      const data = new FormData(form);
+      const myForm = e.currentTarget;
+      const netlifyData = new FormData(myForm);
 
-      await fetch("/__forms.html", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(data as unknown as Record<string, string>).toString(),
+      const params = new URLSearchParams();
+      netlifyData.forEach((value, key) => {
+        params.append(key, value as string);
       });
 
-      setIsSubmitted(true);
+      // Submit to BOTH Netlify Forms and Supabase (admin portal) in parallel
+      const [netlifyRes, supabaseRes] = await Promise.all([
+        fetch("/__forms.html", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params.toString(),
+        }),
+        submitEnquiry({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company,
+          message: formData.message,
+        }),
+      ]);
+
+      if (netlifyRes.status === 200 || supabaseRes.success) {
+        setIsSubmitted(true);
+      } else {
+        setSubmitError(`Submission failed (${netlifyRes.status}). Please try again or email us directly.`);
+      }
     } catch (error) {
       console.error("Submission error:", error);
       setSubmitError("Something went wrong. Please try again or email us directly.");
@@ -180,7 +193,7 @@ export default function ContactClient() {
                       method="POST"
                       className="p-6 md:p-14"
                     >
-                      {/* form-name hidden field is required in the POST body for Netlify */}
+                      {/* Hidden fields for Netlify */}
                       <input type="hidden" name="form-name" value="contact" />
                       <p className="hidden">
                         <label>
