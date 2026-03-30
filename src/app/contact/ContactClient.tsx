@@ -94,7 +94,7 @@ export default function ContactClient() {
     setSubmitError(null);
 
     try {
-      const response = await fetch("/contact", {
+      const response = await fetch("/__forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: encode({
@@ -132,28 +132,8 @@ export default function ContactClient() {
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <Navbar onCartOpen={() => setCartOpen(true)} />
 
-      {/* ── HIDDEN STATIC FORM FOR NETLIFY BOT DETECTION ─────────────────
-           Netlify's build-time bot scans the HTML for forms with
-           data-netlify="true". Because the real form is rendered by
-           React at runtime, the bot never sees it. This invisible
-           static version ensures Netlify registers the form and
-           creates the "contact" form endpoint in the dashboard.
-           
-           Field names MUST match the JS form exactly.                    */}
-      <form
-        name="contact"
-        data-netlify="true"
-        netlify-honeypot="bot-field"
-        hidden
-      >
-        <input type="hidden" name="form-name" value="contact" />
-        <input type="hidden" name="bot-field" />
-        <input type="text" name="name" />
-        <input type="text" name="company" />
-        <input type="tel" name="phone" />
-        <input type="email" name="email" />
-        <textarea name="message" />
-      </form>
+      {/* Form detection is handled by public/__forms.html (static file).
+           Netlify's build bot cannot see forms inside React components. */}
 
       <main className="bg-white min-h-screen pt-32 md:pt-40 px-4 md:px-8 font-genos relative z-10 flex-grow mb-[75vh]">
         <div className="max-w-[1400px] mx-auto">
@@ -204,11 +184,9 @@ export default function ContactClient() {
                       onSubmit={handleSubmit}
                       name="contact"
                       method="POST"
-                      data-netlify="true"
-                      netlify-honeypot="bot-field"
                       className="p-6 md:p-14"
                     >
-                      {/* Netlify required hidden fields */}
+                      {/* form-name hidden field is required in the POST body for Netlify */}
                       <input type="hidden" name="form-name" value="contact" />
                       <p className="hidden">
                         <label>
