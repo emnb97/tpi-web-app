@@ -10,7 +10,7 @@ import Footer from "../components/Footer";
 import BackgroundWires from "../components/BackgroundWires";
 import CartSidebar from "../components/CartSidebar";
 import { useCart } from "../context/CartContext";
-import { getProducts } from "../actions/admin";
+import { getProducts, getSiteContent } from "../actions/admin";
 
 interface Product {
   id: number;
@@ -20,14 +20,152 @@ interface Product {
   image: string;
   stock: number;
   desc: string; 
-  description?: string; // Mapped from DB
+  description?: string;
   fullSpecs?: string;
+}
+
+interface PopupSettings {
+  enabled: boolean;
+  title: string;
+  message: string;
 }
 
 const categories = ["Featured", "Merchandise", "Tools", "Digital"];
 
+/* ── Flipping TPI Logo Component ─────────────────────────────────────────────
+   Desktop: flips on hover  |  Mobile: flips on tap/touch
+   Uses a clean horizontal 3D flip with perspective & backface-visibility.
+   Both logo PNGs are transparent — the effect looks seamless.              */
+function FlippingLogo({ size = 192, className = "" }: { size?: number; className?: string }) {
+  const [flipped, setFlipped] = useState(false);
+
+  return (
+    <div
+      className={`cursor-pointer ${className}`}
+      style={{ width: size, height: size }}
+      /* Desktop: flip on hover in/out */
+      onMouseEnter={() => setFlipped(true)}
+      onMouseLeave={() => setFlipped(false)}
+      /* Mobile: toggle on tap */
+      onTouchStart={(e) => {
+        e.preventDefault();
+        setFlipped((f) => !f);
+      }}
+    >
+      <div className="relative w-full h-full" style={{ perspective: 2000 }}>
+        <div
+          className="relative w-full h-full transition-transform duration-1000 ease-in-out"
+          style={{
+            transformStyle: "preserve-3d",
+            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+          }}
+        >
+          <Image
+            src="/tpilogo1.png"
+            alt="TPI"
+            fill
+            sizes={`${size}px`}
+            className="object-contain"
+            style={{ backfaceVisibility: "hidden" }}
+            priority
+          />
+          <Image
+            src="/tpilogo2.png"
+            alt="TPI"
+            fill
+            sizes={`${size}px`}
+            className="object-contain"
+            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+            priority
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Store Popup ──────────────────────────────────────────────────────────────
+   Controlled via the admin CMS.  Three CMS keys drive it:
+     store.popup.enabled   →  "true" / "false"
+     store.popup.title     →  headline text
+     store.popup.message   →  body copy                                      */
+function StorePopup({ settings, onClose }: { settings: PopupSettings; onClose: () => void }) {
+  return (
+    <AnimatePresence>
+      {settings.enabled && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-[#002D72]/60 backdrop-blur-md"
+            onClick={onClose}
+          />
+
+          {/* Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", damping: 22, stiffness: 260 }}
+            className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden"
+          >
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-6 right-6 z-10 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-[#002D72] transition-all"
+              aria-label="Close popup"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Top accent bar */}
+            <div className="h-2 w-full bg-gradient-to-r from-[#002D72] via-[#0072CE] to-[#00A651]" />
+
+            <div className="px-8 pt-10 pb-10 flex flex-col items-center text-center">
+              {/* Large flipping logos */}
+              <FlippingLogo size={160} className="mb-8" />
+
+              {/* Title */}
+              <h2 className="text-3xl md:text-4xl font-black text-[#002D72] italic uppercase tracking-tighter leading-none mb-4 font-genos">
+                {settings.title}
+              </h2>
+
+              {/* Message */}
+              <p className="text-slate-500 text-lg leading-relaxed max-w-sm mb-8">
+                {settings.message}
+              </p>
+
+              {/* CTA row */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                <button
+                  onClick={onClose}
+                  className="flex-1 bg-[#002D72] text-white py-4 rounded-2xl font-black uppercase tracking-[0.15em] text-xs hover:bg-[#0072CE] transition-all shadow-xl flex items-center justify-center gap-2"
+                >
+                  Browse anyway <ArrowRight size={16} />
+                </button>
+                <Link
+                  href="/courses"
+                  className="flex-1 bg-white border-2 border-[#002D72] text-[#002D72] py-4 rounded-2xl font-black uppercase tracking-[0.15em] text-xs hover:bg-[#002D72] hover:text-white transition-all flex items-center justify-center gap-2"
+                >
+                  View courses
+                </Link>
+              </div>
+
+              {/* Cheeky footer line */}
+              <p className="text-[11px] text-slate-300 mt-6 italic">
+                Our engineers are busy pulling cables, not stocking shelves... yet.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function ProductCard({ product, onOpen, onAddToCart }: { product: Product; onOpen: () => void; onAddToCart: () => void }) {
-  // Map 'description' from DB if 'desc' is missing
   const displayDesc = product.desc || product.description || "No description available.";
   
   return (
@@ -65,25 +203,55 @@ export default function StoreClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const { addToCart } = useCart();
   
-  // LIVE DATA STATES
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // FETCH FROM SUPABASE VIA SERVER ACTION
+  // POPUP STATE — driven by CMS
+  const [popupSettings, setPopupSettings] = useState<PopupSettings>({
+    enabled: false,
+    title: "We're stocking up!",
+    message: "Our store is live but products are still being loaded. Come back soon — it'll be worth the wait.",
+  });
+  const [popupDismissed, setPopupDismissed] = useState(false);
+
   useEffect(() => {
     async function fetchLiveProducts() {
       try {
         const data = await getProducts();
-        if (data) {
-          setAllProducts(data as Product[]);
-        }
+        if (data) setAllProducts(data as Product[]);
       } catch (err) {
         console.error("Error fetching products:", err);
       }
       setIsLoading(false);
     }
+
+    async function fetchPopupSettings() {
+      try {
+        const cmsData = await getSiteContent();
+        if (cmsData && Array.isArray(cmsData)) {
+          const popupEntries = cmsData.filter(
+            (c: { page: string; section: string }) => c.page === "store" && c.section === "popup"
+          );
+          if (popupEntries.length > 0) {
+            const getVal = (id: string) =>
+              (popupEntries.find((e: { id: string }) => e.id === id) as { content: string } | undefined)?.content || "";
+            const isEnabled = getVal("store.popup.enabled") === "true";
+            const title = getVal("store.popup.title");
+            const message = getVal("store.popup.message");
+            setPopupSettings({
+              enabled: isEnabled,
+              title: title || "We're stocking up!",
+              message: message || "Our store is live but products are still being loaded. Come back soon — it'll be worth the wait.",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching popup settings:", err);
+      }
+    }
     
     fetchLiveProducts();
+    fetchPopupSettings();
     setMounted(true); 
   }, []);
 
@@ -106,6 +274,11 @@ export default function StoreClient() {
       <BackgroundWires />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <Navbar onCartOpen={() => setCartOpen(true)} />
+
+      {/* ── CMS-CONTROLLED STORE POPUP ──────────────────────────────────── */}
+      {!popupDismissed && (
+        <StorePopup settings={popupSettings} onClose={() => setPopupDismissed(true)} />
+      )}
 
       <main className="relative z-10 pt-32 md:pt-48 pb-16 md:pb-32 overflow-x-hidden">
         {/* HERO */}
@@ -153,7 +326,7 @@ export default function StoreClient() {
           )}
         </section>
 
-        {/* STORE QUICK LINKS - RESPONSIVE FIX APPLIED HERE */}
+        {/* STORE QUICK LINKS */}
         <section className="px-4 md:px-8 max-w-[1400px] mx-auto mt-20 md:mt-40 w-full overflow-hidden">
           <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 md:gap-12 w-full">
             <div className="lg:col-span-5 bg-[#002D72] rounded-[2rem] md:rounded-[4rem] p-8 md:p-16 flex flex-col justify-center w-full">
@@ -206,8 +379,6 @@ export default function StoreClient() {
                     <div><h4 className="text-[#002D72] font-black uppercase text-xs tracking-widest mb-1 md:mb-2 font-genos">Technical Specifications</h4><p className="text-slate-400 text-sm leading-relaxed">{selectedProduct.fullSpecs}</p></div>
                   )}
                 </div>
-                
-                {/* Task 3: Stripe Modal Integration via "Buy Now" */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-auto">
                   <button 
                     onClick={() => { handleAddToCart(selectedProduct); setSelectedProduct(null); }} 
@@ -222,7 +393,6 @@ export default function StoreClient() {
                     Buy Now <ArrowRight size={18} />
                   </button>
                 </div>
-                
                 <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100 flex items-center gap-4 md:gap-6 shrink-0 flex-wrap">
                   <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest"><ShieldCheck size={16} className="text-[#00A651]" /> Secure payment</div>
                   <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest"><CreditCard size={16} className="text-[#0072CE]" /> UK shipping</div>
@@ -233,7 +403,6 @@ export default function StoreClient() {
         )}
       </AnimatePresence>
 
-      {/* Stripe Checkout "Coming Soon" Modal */}
       {checkoutModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCheckoutModal(false)} />

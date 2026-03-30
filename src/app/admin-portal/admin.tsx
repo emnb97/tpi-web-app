@@ -1138,10 +1138,22 @@ export default function AdminPortal() {
                   ) : (
                 sections.map(section => (
                   <div key={section} className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-1 h-6 rounded-full bg-[#0072CE]" />
-                      <h3 className="text-sm font-bold text-white uppercase tracking-widest">{section}</h3>
-                    </div>
+                    {section === 'popup' ? (
+                      <div className="flex items-center gap-3 bg-[#00A651]/10 border border-[#00A651]/20 rounded-xl p-4">
+                        <div className="w-10 h-10 rounded-xl bg-[#00A651]/20 flex items-center justify-center">
+                          <ShoppingBag size={18} className="text-[#00A651]" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-[#00A651] uppercase tracking-widest">Store Popup</h3>
+                          <p className="text-[10px] text-slate-400 mt-0.5">Control the &quot;come back soon&quot; popup shown to store visitors</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <div className="w-1 h-6 rounded-full bg-[#0072CE]" />
+                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">{section}</h3>
+                      </div>
+                    )}
                     <div className="grid gap-4 md:grid-cols-2">
                       {currentPageContent.filter(c => c.section === section).map(item => {
                         const dimensions = getMediaDimensions(item.id);
@@ -1228,6 +1240,27 @@ export default function AdminPortal() {
                                   </div>
                                 </div>
                               )}
+                            </div>
+                          ) : item.id === 'store.popup.enabled' ? (
+                            /* ── Special toggle for Store Popup enabled/disabled ── */
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between bg-[#161B22] border border-white/[0.08] rounded-xl p-4">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-3 h-3 rounded-full ${previewValue === 'true' ? 'bg-[#00A651] shadow-[0_0_8px_rgba(0,166,81,0.5)]' : 'bg-slate-600'} transition-colors`} />
+                                  <span className="text-sm font-semibold text-white">
+                                    Store popup is {previewValue === 'true' ? 'LIVE' : 'OFF'}
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => updatePreview(item.id, previewValue === 'true' ? 'false' : 'true')}
+                                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${previewValue === 'true' ? 'bg-[#00A651]' : 'bg-slate-700'}`}
+                                >
+                                  <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-all duration-300 ${previewValue === 'true' ? 'left-[calc(100%-1.625rem)]' : 'left-0.5'}`} />
+                                </button>
+                              </div>
+                              <p className="text-[9px] text-slate-500">
+                                <span className="text-slate-400">Note:</span> When enabled, visitors to the Store page will see the popup with the title and message configured below. Toggle off to hide it instantly.
+                              </p>
                             </div>
                           ) : (
                             <div className="space-y-3">

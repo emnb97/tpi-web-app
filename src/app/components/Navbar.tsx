@@ -48,16 +48,20 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
 
   return (
     <>
-      {/* Top-left logo flip - CSS hover on desktop, tap toggle on mobile */}
+      {/* Top-left logo flip — hidden on mobile when hamburger menu is open */}
       <Link href="/" aria-label="The Physical Internet — Home">
         <motion.div
           style={{ opacity: logoOpacity }}
-          className="fixed top-2 left-4 md:left-10 z-[1000] w-28 h-28 md:w-48 md:h-48 cursor-pointer group [perspective:2000px]"
+          className={`fixed top-2 left-4 md:left-10 z-[1000] w-28 h-28 md:w-48 md:h-48 cursor-pointer [perspective:2000px] ${
+            mobileMenuOpen ? "hidden md:block" : "block"
+          }`}
+          onMouseEnter={() => setLogoFlipped(true)}
+          onMouseLeave={() => setLogoFlipped(false)}
           onTouchStart={(e) => { e.stopPropagation(); setLogoFlipped(f => !f); }}
         >
           <div
-            className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d] md:group-hover:[transform:rotateY(180deg)]"
-            style={logoFlipped ? { transform: "rotateY(180deg)" } : undefined}
+            className="relative w-full h-full transition-transform duration-1000 ease-in-out [transform-style:preserve-3d]"
+            style={{ transform: logoFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
           >
             <div className="absolute inset-0 [backface-visibility:hidden]">
               <Image src="/tpilogo.png" alt="TPI Logo" fill className="object-contain" priority sizes="(max-width: 768px) 112px, 192px" />
@@ -131,7 +135,7 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                 <X size={20} className="text-[#002D72]" />
               </button>
 
-              {/* Logo in menu - tap to flip */}
+              {/* Logo in menu — tap to flip */}
               <div className="pt-20 px-8">
                 <div
                   className="relative w-24 h-24 mb-8 [perspective:2000px] cursor-pointer"
@@ -139,8 +143,8 @@ export default function Navbar({ onCartOpen }: NavbarProps) {
                   onClick={() => setLogoFlipped(f => !f)}
                 >
                   <div
-                    className="relative w-full h-full transition-all duration-1000 [transform-style:preserve-3d]"
-                    style={logoFlipped ? { transform: "rotateY(180deg)" } : undefined}
+                    className="relative w-full h-full transition-transform duration-1000 ease-in-out [transform-style:preserve-3d]"
+                    style={{ transform: logoFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
                   >
                     <div className="absolute inset-0 [backface-visibility:hidden]">
                       <Image src="/tpilogo.png" alt="TPI" fill className="object-contain" sizes="96px" />
