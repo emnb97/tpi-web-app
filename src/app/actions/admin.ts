@@ -225,6 +225,12 @@ export async function updateLeadStatus(id: number, status: string) {
   return { success: !error };
 }
 
+export async function deleteEnquiry(id: number) {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.from("enquiries").delete().eq("id", id);
+  return { success: !error };
+}
+
 // --- SUBMIT ENQUIRY (called from Contact form) ---
 export async function submitEnquiry(data: {
   name: string;

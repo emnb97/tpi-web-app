@@ -213,6 +213,7 @@ export default function AdminPortal() {
   const [productSaving, setProductSaving] = useState(false);
   const [productImgUploading, setProductImgUploading] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Enquiry | null>(null);
+  const [confirmDeleteLead, setConfirmDeleteLead] = useState<number | null>(null);
   const [leadFilter, setLeadFilter] = useState<"All" | "New" | "Contacted" | "Closed">("All");
   const [leadSearch, setLeadSearch] = useState("");
   const [mediaUploading, setMediaUploading] = useState(false);
@@ -421,6 +422,18 @@ export default function AdminPortal() {
       setSelectedLead(prev => prev?.id === id ? { ...prev, status } : prev);
       showToast(`Marked as ${status}`);
     } else showToast("Update failed", "error");
+  };
+
+  const deleteEnquiry = async (id: number) => {
+    const res = await adminActions.deleteEnquiry(id);
+    if (res.success) {
+      setLeads(prev => prev.filter(l => l.id !== id));
+      setSelectedLead(null);
+      setConfirmDeleteLead(null);
+      showToast("Enquiry deleted");
+    } else {
+      showToast("Failed to delete enquiry", "error");
+    }
   };
 
   const filteredLeads = leads.filter(l => {
@@ -1763,7 +1776,7 @@ export default function AdminPortal() {
                   <p className="text-sm font-semibold text-white">{selectedLead.name}</p>
                   <StatusBadge status={selectedLead.status} />
                 </div>
-                <button onClick={() => setSelectedLead(null)} className="p-1.5 rounded-lg hover:bg-white/5 text-slate-500 transition-colors"><X size={15} /></button>
+                <button onClick={() => { setSelectedLead(null); setConfirmDeleteLead(null); }} className="p-1.5 rounded-lg hover:bg-white/5 text-slate-500 transition-colors"><X size={15} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -1788,11 +1801,25 @@ export default function AdminPortal() {
                   </div>
                 )}
               </div>
-              <div className="px-6 py-4 border-t border-white/[0.06] flex items-center gap-2 flex-wrap">
-                <a href={`mailto:${selectedLead.email}?subject=Re: Your TPI Enquiry`} className={btnPrimary}><Mail size={13} />Reply by email</a>
-                {selectedLead.phone && <a href={`tel:${selectedLead.phone}`} className={btnGhost}><Phone size={13} />Call</a>}
-                {selectedLead.status !== "Contacted" && <button onClick={() => updateLeadStatus(selectedLead.id, "Contacted")} className={btnGhost}><CheckSquare size={13} />Mark contacted</button>}
-                {selectedLead.status !== "Closed" && <button onClick={() => updateLeadStatus(selectedLead.id, "Closed")} className={btnGhost}><X size={13} />Close</button>}
+              <div className="px-6 py-4 border-t border-white/[0.06] space-y-3">
+                {/* Confirm delete banner */}
+                {confirmDeleteLead === selectedLead.id ? (
+                  <div className="flex items-center justify-between bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+                    <p className="text-xs text-red-400 font-medium">Are you sure? This cannot be undone.</p>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setConfirmDeleteLead(null)} className={btnGhost}><X size={13} />Cancel</button>
+                      <button onClick={() => deleteEnquiry(selectedLead.id)} className={btnDanger}><Trash2 size={13} />Yes, delete</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <a href={`mailto:${selectedLead.email}?subject=Re: Your TPI Enquiry`} className={btnPrimary}><Mail size={13} />Reply by email</a>
+                    {selectedLead.phone && <a href={`tel:${selectedLead.phone}`} className={btnGhost}><Phone size={13} />Call</a>}
+                    {selectedLead.status !== "Contacted" && <button onClick={() => updateLeadStatus(selectedLead.id, "Contacted")} className={btnGhost}><CheckSquare size={13} />Mark contacted</button>}
+                    {selectedLead.status !== "Closed" && <button onClick={() => updateLeadStatus(selectedLead.id, "Closed")} className={btnGhost}><X size={13} />Close</button>}
+                    <button onClick={() => setConfirmDeleteLead(selectedLead.id)} className={btnDanger}><Trash2 size={13} />Delete</button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
