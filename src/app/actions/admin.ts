@@ -309,3 +309,71 @@ export async function deleteTestimonial(id: number) {
   const { error } = await supabase.from("testimonials").delete().eq("id", id);
   return { success: !error };
 }
+
+// --- STAFF AUTH ACTIONS ---
+export async function authenticateStaff(username: string, password: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("staff_auth")
+    .select("*")
+    .eq("username", username)
+    .eq("password", password)
+    .eq("status", "Active")
+    .single();
+
+  if (error || !data) return { success: false };
+  
+  // Update last login
+  await supabase
+    .from("staff_auth")
+    .update({ last_login: new Date().toISOString() })
+    .eq("id", data.id);
+
+  return { success: true, role: data.role };
+}
+
+export async function saveStaffCredentials(
+  payload: {
+    name: string;
+    email: string;
+    username: string;
+    password: string;
+    role: string;
+    department: string;
+  },
+  id?: number
+) {
+  const supabase = getSupabaseAdmin();
+  try {
+    if (!id) {
+      // New staff member
+      const { error } = await supabase.from("staff_auth").insert([{
+        name: payload.name,
+        email: payload.email,
+        username: payload.username,
+        password: payload.password,
+        role: payload.role,
+        department: payload.department,
+        status: "Active",
+        last_login: null,
+      }]);
+      if (error) return { success: false, error: error.message };
+    } else {
+      // Update existing — only update password if provided
+      const updateData: Record<string, string> = {
+        name: payload.name,
+        email: payload.email,
+        username: payload.username,
+        role: payload.role,
+        department: payload.department,
+      };
+      if (payload.password) updateData.password = payload.password;
+
+      const { error } = await supabase.from("staff_auth").update(updateData).eq("id", id);
+      if (error) return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: "Server error saving credentials" };
+  }
+}

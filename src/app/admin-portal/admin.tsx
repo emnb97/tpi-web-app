@@ -32,6 +32,7 @@ interface MediaFile {
 interface StaffMember {
   id: number; name: string; role: "Super Admin" | "Fleet Manager" | "Content Editor";
   status: "Active" | "Inactive"; department: string; email: string; lastLogin: string;
+  username?: string; password?: string;
 }
 interface Payment {
   id: string; customer: string; amount: number;
@@ -341,11 +342,23 @@ export default function AdminPortal() {
     e.preventDefault();
     setLoginLoading(true); setLoginError("");
     try {
+      // Try .env auth first (Super Admin)
       const res = await fetch("/api/auth", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      res.ok ? setIsLoggedIn(true) : setLoginError("Invalid credentials.");
+      if (res.ok) {
+        setIsLoggedIn(true);
+        return;
+      }
+      
+      // Fallback: try Supabase staff credentials
+      const staffRes = await adminActions.authenticateStaff(username, password);
+      if (staffRes.success) {
+        setIsLoggedIn(true);
+      } else {
+        setLoginError("Invalid credentials.");
+      }
     } catch { setLoginError("Connection error. Please try again."); }
     finally { setLoginLoading(false); }
   };
@@ -522,10 +535,31 @@ export default function AdminPortal() {
   };
 
   // ── Staff ──────────────────────────────────────────────────────────────────
-  const saveStaff = () => {
+  const saveStaff = async () => {
     if (!editingStaff) return;
-    if (editingStaff.id === 0) setStaff(prev => [...prev, { ...editingStaff, id: Date.now(), lastLogin: "Never" }]);
-    else setStaff(prev => prev.map(s => s.id === editingStaff.id ? editingStaff : s));
+    
+    // Save credentials to Supabase if username is provided
+    if (editingStaff.username) {
+      const res = await adminActions.saveStaffCredentials({
+        name: editingStaff.name,
+        email: editingStaff.email,
+        username: editingStaff.username,
+        password: editingStaff.password || "",
+        role: editingStaff.role,
+        department: editingStaff.department,
+      }, editingStaff.id === 0 ? undefined : editingStaff.id);
+      
+      if (!res.success) {
+        showToast(res.error || "Failed to save credentials", "error");
+        return;
+      }
+    }
+    
+    if (editingStaff.id === 0) {
+      setStaff(prev => [...prev, { ...editingStaff, id: Date.now(), lastLogin: "Never", password: undefined }]);
+    } else {
+      setStaff(prev => prev.map(s => s.id === editingStaff.id ? { ...editingStaff, password: undefined } : s));
+    }
     setStaffModal(false);
     showToast("Staff member saved");
   };
@@ -1607,6 +1641,38 @@ export default function AdminPortal() {
                 </div>
               </div>
 
+              {/* Clarity Quick Links */}
+              {siteContent.find(c => c.id === 'settings.analytics.clarity_id')?.content && (
+                <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-wrap gap-3">
+                  <a 
+                    href={`https://clarity.microsoft.com/projects/view/${siteContent.find(c => c.id === 'settings.analytics.clarity_id')?.content}/dashboard`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={btnPrimary}
+                  >
+                    <BarChart3 size={13} />View Clarity Dashboard
+                    <ExternalLink size={11} />
+                  </a>
+                  <a 
+                    href={`https://clarity.microsoft.com/projects/view/${siteContent.find(c => c.id === 'settings.analytics.clarity_id')?.content}/heatmaps`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={btnGhost}
+                  >
+                    <MousePointer2 size={13} />View Heatmaps
+                    <ExternalLink size={11} />
+                  </a>
+                  <a 
+                    href={`https://clarity.microsoft.com/projects/view/${siteContent.find(c => c.id === 'settings.analytics.clarity_id')?.content}/recordings`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={btnGhost}
+                  >
+                    <Play size={13} />Session Recordings
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* SEO Checklist */}
@@ -1846,6 +1912,27 @@ export default function AdminPortal() {
                     </select>
                   </div>
                   <div className="space-y-1.5"><label className={label}>Department</label><input className={inputCls} value={editingStaff.department} onChange={e => setEditingStaff({ ...editingStaff, department: e.target.value })} /></div>
+                </div>
+                
+                {/* Login Credentials */}
+                <div className="pt-4 mt-2 border-t border-white/[0.06]">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-md bg-[#0072CE]/10 flex items-center justify-center">
+                      <Eye size={12} className="text-[#0072CE]" />
+                    </div>
+                    <span className="text-xs font-semibold text-white uppercase tracking-wider">Login Credentials</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className={label}>Username</label>
+                      <input className={inputCls} placeholder="e.g. john.smith" value={editingStaff.username || ""} onChange={e => setEditingStaff({ ...editingStaff, username: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className={label}>{editingStaff.id === 0 ? "Password" : "New password"}</label>
+                      <input className={inputCls} type="password" placeholder={editingStaff.id === 0 ? "Set password" : "Leave blank to keep"} value={editingStaff.password || ""} onChange={e => setEditingStaff({ ...editingStaff, password: e.target.value })} />
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-slate-600 mt-2">These credentials allow this person to log into the admin portal.</p>
                 </div>
               </div>
               <div className="px-6 py-4 border-t border-white/[0.06] flex justify-end gap-2.5">
