@@ -83,8 +83,16 @@ export default function ContactClient() {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    // Capture form data BEFORE any await — React clears e.currentTarget after async gaps
+    const myForm = e.currentTarget;
+    const netlifyData = new FormData(myForm);
+    const params = new URLSearchParams();
+    netlifyData.forEach((value, key) => {
+      params.append(key, value as string);
+    });
+
     try {
-      // 1. Save to Supabase (admin portal) — this is the primary data store
+      // 1. Save to Supabase (admin portal) — primary data store
       const supabaseRes = await submitEnquiry({
         name: formData.name,
         email: formData.email,
@@ -93,31 +101,21 @@ export default function ContactClient() {
         message: formData.message,
       });
 
-      // 2. Also try Netlify Forms (fire-and-forget — don't let it block success)
-      const myForm = e.currentTarget;
-      const netlifyData = new FormData(myForm);
-      const params = new URLSearchParams();
-      netlifyData.forEach((value, key) => {
-        params.append(key, value as string);
-      });
-
+      // 2. Also try Netlify Forms (fire-and-forget)
       fetch("/__forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString(),
-      }).catch(() => {
-        // Netlify form submission is optional — Supabase is the source of truth
-        console.log("Netlify Forms POST failed (non-critical)");
-      });
+      }).catch(() => {});
 
       if (supabaseRes.success) {
         setIsSubmitted(true);
       } else {
-        setSubmitError("Submission failed. Please try again or email us directly.");
+        setSubmitError(`Save failed: ${supabaseRes.error || "Unknown error"}. Please email us directly.`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submission error:", error);
-      setSubmitError("Something went wrong. Please try again or email us directly.");
+      setSubmitError(`Error: ${error?.message || String(error)}. Please email us directly.`);
     } finally {
       setIsSubmitting(false);
     }
