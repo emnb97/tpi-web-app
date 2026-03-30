@@ -83,16 +83,7 @@ export default function ContactClient() {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    // Capture form data BEFORE any await — React clears e.currentTarget after async gaps
-    const myForm = e.currentTarget;
-    const netlifyData = new FormData(myForm);
-    const params = new URLSearchParams();
-    netlifyData.forEach((value, key) => {
-      params.append(key, value as string);
-    });
-
     try {
-      // 1. Save to Supabase (admin portal) — primary data store
       const supabaseRes = await submitEnquiry({
         name: formData.name,
         email: formData.email,
@@ -101,13 +92,6 @@ export default function ContactClient() {
         message: formData.message,
       });
 
-      // 2. Also try Netlify Forms (fire-and-forget)
-      fetch("/__forms.html", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params.toString(),
-      }).catch(() => {});
-
       if (supabaseRes.success) {
         setIsSubmitted(true);
       } else {
@@ -115,7 +99,7 @@ export default function ContactClient() {
       }
     } catch (error: any) {
       console.error("Submission error:", error);
-      setSubmitError(`Error: ${error?.message || String(error)}. Please email us directly.`);
+      setSubmitError("Something went wrong. Please try again or email us directly.");
     } finally {
       setIsSubmitting(false);
     }
@@ -138,9 +122,6 @@ export default function ContactClient() {
       <BackgroundWires />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       <Navbar onCartOpen={() => setCartOpen(true)} />
-
-      {/* Form detection is handled by public/__forms.html (static file).
-           Netlify's build bot cannot see forms inside React components. */}
 
       <main className="bg-white min-h-screen pt-32 md:pt-40 px-4 md:px-8 font-genos relative z-10 flex-grow mb-[75vh]">
         <div className="max-w-[1400px] mx-auto">
@@ -189,18 +170,8 @@ export default function ContactClient() {
                       initial={{ opacity: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       onSubmit={handleSubmit}
-                      name="contact"
-                      method="POST"
                       className="p-6 md:p-14"
                     >
-                      {/* Hidden fields for Netlify */}
-                      <input type="hidden" name="form-name" value="contact" />
-                      <p className="hidden">
-                        <label>
-                          Don&apos;t fill this out if you&apos;re human:
-                          <input name="bot-field" />
-                        </label>
-                      </p>
 
                       <div className="space-y-8">
                         {/* Name & Company Row */}
