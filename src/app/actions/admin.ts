@@ -310,6 +310,27 @@ export async function deleteTestimonial(id: number) {
   return { success: !error };
 }
 
+export async function submitTestimonial(data: { author: string; content: string }) {
+  const supabase = getSupabaseAdmin();
+  try {
+    const { error } = await supabase.from("testimonials").insert({
+      author: data.author,
+      content: data.content,
+      status: "Pending",
+      stars: 5,
+      date: new Date().toISOString(),
+    });
+    if (error) {
+      console.error("Testimonial insert error:", error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error("submitTestimonial error:", err);
+    return { success: false, error: "Server error" };
+  }
+}
+
 // --- STAFF AUTH ACTIONS ---
 export async function authenticateStaff(username: string, password: string) {
   const supabase = getSupabaseAdmin();

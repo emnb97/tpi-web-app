@@ -9,7 +9,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BackgroundWires from "../components/BackgroundWires";
 import CartSidebar from "../components/CartSidebar";
-import { getSiteContent, getCourses, getTestimonials } from "../actions/admin";
+import { getSiteContent, getCourses, getTestimonials, submitTestimonial } from "../actions/admin";
 
 interface Course {
   id: number;
@@ -99,6 +99,11 @@ export default function CoursesClient() {
   const [cms, setCms] = useState<Record<string, string>>({});
   const [courses, setCourses] = useState<Course[]>([]);
   const [testimonials, setTestimonials] = useState<string[]>([]);
+  const [testimonialName, setTestimonialName] = useState("");
+  const [testimonialMessage, setTestimonialMessage] = useState("");
+  const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
+  const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
+  const [testimonialError, setTestimonialError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -297,19 +302,122 @@ export default function CoursesClient() {
         <section className="px-0 mb-24 md:mb-40">
           <div className="bg-white rounded-[2rem] md:rounded-[4rem] border border-slate-100 shadow-2xl overflow-hidden grid grid-cols-12 font-genos">
             <div className="col-span-12 lg:col-span-7 p-8 md:p-12 lg:p-20 lg:border-r border-slate-50 text-proper">
-              <h2 className="text-4xl md:text-6xl font-black text-[#002D72] italic uppercase tracking-tighter mb-4 leading-none">
-                {cms['courses.submit.title'] || "Submit a Testimonial"}
-              </h2>
-              <p className="text-lg md:text-xl text-slate-400 mb-8 md:mb-12">
-                {cms['courses.submit.desc'] || "Share your experience with the network."}
-              </p>
-              <form className="space-y-4 md:space-y-6" onSubmit={(e) => { e.preventDefault(); alert("Signal sent to Matrix for approval."); }}>
-                <input required placeholder="Full Name" className="bg-slate-50 border-none rounded-2xl md:rounded-3xl p-4 md:p-6 text-base md:text-lg w-full outline-none focus:ring-2 focus:ring-[#0072CE]/20" />
-                <textarea required placeholder="Your Message" rows={4} className="bg-slate-50 border-none rounded-2xl md:rounded-3xl p-4 md:p-6 text-base md:text-lg w-full outline-none focus:ring-2 focus:ring-[#0072CE]/20" />
-                <button type="submit" className="bg-[#002D72] text-white w-full py-5 md:py-8 rounded-2xl md:rounded-[2.5rem] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-xs hover:bg-[#0072CE] transition-all shadow-xl">
-                  Submit to Matrix
-                </button>
-              </form>
+              <AnimatePresence mode="wait">
+                {!testimonialSubmitted ? (
+                  <motion.div key="form" initial={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
+                    <h2 className="text-4xl md:text-6xl font-black text-[#002D72] italic uppercase tracking-tighter mb-4 leading-none">
+                      {cms['courses.submit.title'] || "Submit a Testimonial"}
+                    </h2>
+                    <p className="text-lg md:text-xl text-slate-400 mb-8 md:mb-12">
+                      {cms['courses.submit.desc'] || "Share your experience with the network."}
+                    </p>
+                    <form className="space-y-4 md:space-y-6" onSubmit={async (e) => {
+                      e.preventDefault();
+                      setTestimonialSubmitting(true);
+                      setTestimonialError(null);
+                      try {
+                        const res = await submitTestimonial({
+                          author: testimonialName,
+                          content: testimonialMessage,
+                        });
+                        if (res.success) {
+                          setTestimonialSubmitted(true);
+                        } else {
+                          setTestimonialError(res.error || "Submission failed. Please try again.");
+                        }
+                      } catch {
+                        setTestimonialError("Something went wrong. Please try again.");
+                      } finally {
+                        setTestimonialSubmitting(false);
+                      }
+                    }}>
+                      <input 
+                        required 
+                        placeholder="Full Name" 
+                        value={testimonialName}
+                        onChange={(e) => setTestimonialName(e.target.value)}
+                        className="bg-slate-50 border-none rounded-2xl md:rounded-3xl p-4 md:p-6 text-base md:text-lg w-full outline-none focus:ring-2 focus:ring-[#0072CE]/20" 
+                      />
+                      <textarea 
+                        required 
+                        placeholder="Your Message" 
+                        rows={4} 
+                        value={testimonialMessage}
+                        onChange={(e) => setTestimonialMessage(e.target.value)}
+                        className="bg-slate-50 border-none rounded-2xl md:rounded-3xl p-4 md:p-6 text-base md:text-lg w-full outline-none focus:ring-2 focus:ring-[#0072CE]/20" 
+                      />
+                      {testimonialError && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm font-medium text-center">
+                          {testimonialError}
+                        </div>
+                      )}
+                      <button 
+                        type="submit" 
+                        disabled={testimonialSubmitting}
+                        className="bg-[#002D72] text-white w-full py-5 md:py-8 rounded-2xl md:rounded-[2.5rem] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-xs hover:bg-[#0072CE] transition-all shadow-xl disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                      >
+                        {testimonialSubmitting ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                            />
+                            Submitting...
+                          </>
+                        ) : (
+                          "Submit to Matrix"
+                        )}
+                      </button>
+                    </form>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="success" 
+                    initial={{ opacity: 0, scale: 0.95 }} 
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center text-center py-8 md:py-12"
+                  >
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", damping: 15, stiffness: 200, delay: 0.1 }}
+                      className="w-20 h-20 bg-[#00A651] rounded-full flex items-center justify-center mb-8"
+                    >
+                      <CheckCircle2 size={40} className="text-white" />
+                    </motion.div>
+                    <motion.h3 
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      transition={{ delay: 0.3 }}
+                      className="text-3xl md:text-5xl font-black text-[#002D72] italic uppercase tracking-tighter mb-4"
+                    >
+                      Signal Received!
+                    </motion.h3>
+                    <motion.p 
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
+                      transition={{ delay: 0.5 }}
+                      className="text-lg text-slate-400 mb-8 max-w-sm"
+                    >
+                      Thanks {testimonialName.split(' ')[0]}! Your testimonial has been sent to the team for approval. Once approved, it&apos;ll appear in the marquee above.
+                    </motion.p>
+                    <motion.button
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
+                      transition={{ delay: 0.7 }}
+                      onClick={() => {
+                        setTestimonialSubmitted(false);
+                        setTestimonialName("");
+                        setTestimonialMessage("");
+                      }}
+                      className="text-[#0072CE] font-bold hover:text-[#002D72] transition-colors text-sm uppercase tracking-widest"
+                    >
+                      Submit another
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div className="col-span-12 lg:col-span-5 p-8 md:p-12 lg:p-20 bg-slate-50/50 flex flex-col justify-center items-center text-center">
               <Zap size={48} className="text-[#00A651] mb-4 md:mb-6 md:w-16 md:h-16" />
