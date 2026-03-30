@@ -80,31 +80,25 @@ export default function ContactClient() {
   };
 
   /* ── Netlify-compliant form submission ─────────────────────────────────
-     Encodes the form data as x-www-form-urlencoded and POSTs it to the
-     current page. Netlify intercepts requests with the matching
-     "form-name" field and routes them to the Forms dashboard.            */
-  const encode = (data: Record<string, string>) =>
-    Object.entries(data)
-      .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
-      .join("&");
+     Uses FormData from the actual form element so all hidden fields
+     (form-name, bot-field) are automatically captured. POSTs to the
+     static __forms.html file in /public that Netlify intercepts.         */
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      const response = await fetch("/__forms.html", {
+      const form = e.currentTarget;
+      const data = new FormData(form);
+
+      await fetch("/__forms.html", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode({
-          "form-name": "contact",
-          ...formData,
-        }),
+        body: new URLSearchParams(data as unknown as Record<string, string>).toString(),
       });
 
-      if (!response.ok) throw new Error("Form submission failed");
-      
       setIsSubmitted(true);
     } catch (error) {
       console.error("Submission error:", error);
