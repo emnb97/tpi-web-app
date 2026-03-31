@@ -37,10 +37,12 @@ export default function ServicesClient() {
         const [cmsData, servicesData] = await Promise.all([getSiteContent(), getServices()]);
         const mapping = cmsData.reduce((acc: any, curr: any) => ({ ...acc, [curr.id]: curr.content }), {});
         setCms(mapping);
-        setServices((servicesData as Service[]).filter(s => s.visible !== false));
+        const filtered = (servicesData as Service[]).filter(s => s.visible !== false);
         
-        // Fallback: if no services in database, use defaults
-        if (!servicesData || (servicesData as Service[]).length === 0) {
+        if (filtered.length > 0) {
+          setServices(filtered);
+        } else {
+          // Fallback: if no services in database, use defaults
           setServices([
             {
               id: 1, title: "Copper Cabling", sub: "Cat5e / Cat6 / Cat6a",
