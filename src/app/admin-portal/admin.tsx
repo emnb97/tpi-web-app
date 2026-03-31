@@ -51,6 +51,11 @@ interface CMSContent {
   content: string;
   content_type: 'text' | 'textarea' | 'image' | 'video';
 }
+interface ServiceItem {
+  id: number; title: string; sub: string; description: string;
+  benefits: string[]; image: string; color: string;
+  sort_order: number; visible: boolean;
+}
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const card = "bg-[#0D1117] border border-white/[0.06] rounded-xl";
@@ -200,6 +205,11 @@ export default function AdminPortal() {
   const [mediaLoading, setMediaLoading] = useState(false);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [testimonialsLoading, setTestimonialsLoading] = useState(false);
+  const [svcItems, setSvcItems] = useState<ServiceItem[]>([]);
+  const [svcLoading, setSvcLoading] = useState(false);
+  const [svcModal, setSvcModal] = useState(false);
+  const [currentSvc, setCurrentSvc] = useState<ServiceItem | null>(null);
+  const [svcSaving, setSvcSaving] = useState(false);
   const [staff, setStaff] = useState<StaffMember[]>([
     { id: 1, name: "E. Osobu", role: "Super Admin", status: "Active", department: "Executive", email: "e.osobu@thephysicalinternet.uk", lastLogin: "Now" },
   ]);
@@ -333,9 +343,16 @@ export default function AdminPortal() {
     setTestimonialsLoading(false);
   }, []);
 
+  const fetchServices = useCallback(async () => {
+    setSvcLoading(true);
+    const data = await adminActions.getServices();
+    if (data) setSvcItems(data as ServiceItem[]);
+    setSvcLoading(false);
+  }, []);
+
   useEffect(() => {
-    if (isLoggedIn) { fetchProducts(); fetchLeads(); fetchMedia(); fetchTestimonials(); fetchCMS(); }
-  }, [isLoggedIn, fetchProducts, fetchLeads, fetchMedia, fetchTestimonials, fetchCMS]);
+    if (isLoggedIn) { fetchProducts(); fetchLeads(); fetchMedia(); fetchTestimonials(); fetchServices(); fetchCMS(); }
+  }, [isLoggedIn, fetchProducts, fetchLeads, fetchMedia, fetchTestimonials, fetchServices, fetchCMS]);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const handleLogin = async (e: React.FormEvent) => {
@@ -515,9 +532,15 @@ export default function AdminPortal() {
   // ── CMS Media Picker ──────────────────────────────────────────────────────
   const selectMediaForCMS = (url: string) => {
     if (mediaPickerTarget) {
-      // Update preview state instead of saving directly
-      updatePreview(mediaPickerTarget, url);
-      showToast("Media selected — remember to save your changes");
+      // Check if this is a service image pick
+      if (mediaPickerTarget.startsWith('svc-img-') && currentSvc) {
+        setCurrentSvc({ ...currentSvc, image: url });
+        showToast("Image selected for service");
+      } else {
+        // Standard CMS preview update
+        updatePreview(mediaPickerTarget, url);
+        showToast("Media selected — remember to save your changes");
+      }
     }
     setMediaPickerOpen(false);
     setMediaPickerTarget(null);
@@ -532,6 +555,43 @@ export default function AdminPortal() {
   const deleteTestimonial = async (id: number) => {
     const res = await adminActions.deleteTestimonial(id);
     if (res.success) { setTestimonials(prev => prev.filter(t => t.id !== id)); showToast("Deleted"); }
+  };
+
+  // ── Services ──────────────────────────────────────────────────────────────
+  const saveService = async () => {
+    if (!currentSvc || !currentSvc.title.trim()) return;
+    setSvcSaving(true);
+    const payload = {
+      title: currentSvc.title,
+      sub: currentSvc.sub,
+      description: currentSvc.description,
+      benefits: currentSvc.benefits,
+      image: currentSvc.image,
+      color: currentSvc.color,
+      sort_order: currentSvc.sort_order,
+      visible: currentSvc.visible,
+    };
+    const res = await adminActions.saveService(payload, currentSvc.id);
+    if (res.error) {
+      showToast("Failed to save service", "error");
+    } else {
+      if (currentSvc.id === 0) {
+        setSvcItems(prev => [...prev, { ...currentSvc, id: res.data?.id || Date.now() }]);
+        showToast("Service created");
+      } else {
+        setSvcItems(prev => prev.map(s => s.id === currentSvc.id ? { ...currentSvc } : s));
+        showToast("Service updated");
+      }
+    }
+    setSvcSaving(false);
+    setSvcModal(false);
+  };
+
+  const deleteService = async (id: number) => {
+    if (!confirm("Delete this service? This cannot be undone.")) return;
+    const res = await adminActions.deleteService(id);
+    if (res.success) { setSvcItems(prev => prev.filter(s => s.id !== id)); showToast("Service deleted"); }
+    else showToast("Failed to delete service", "error");
   };
 
   // ── Staff ──────────────────────────────────────────────────────────────────
@@ -1333,6 +1393,65 @@ export default function AdminPortal() {
                 ))
               )}
             </div>
+
+            {/* ── SERVICE CARDS MANAGER (only on Services page) ────────────── */}
+            {cmsActivePage === "services" && (
+              <div className="space-y-4 mt-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1 h-6 rounded-full bg-[#00A651]" />
+                    <h3 className="text-sm font-bold text-white uppercase tracking-widest">Service Cards</h3>
+                    <span className="text-[9px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">{svcItems.length} cards</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={fetchServices} className={btnGhost}><RefreshCw size={13} />Refresh</button>
+                    <button onClick={() => { setCurrentSvc({ id: 0, title: "", sub: "", description: "", benefits: [], image: "", color: "#0072CE", sort_order: svcItems.length + 1, visible: true }); setSvcModal(true); }} className={btnPrimary}><Plus size={13} />Add card</button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500">These cards appear on the live Services page under &quot;What we install&quot;. Click edit to change content or select an image from your media library.</p>
+                {svcLoading ? <Spinner /> : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {svcItems.map(svc => (
+                      <div key={svc.id} className={`${card} overflow-hidden`}>
+                        <div className="relative h-36 bg-[#161B22]">
+                          {svc.image ? <Image src={svc.image} alt={svc.title} fill sizes="400px" className="object-cover opacity-60" unoptimized /> : <div className="w-full h-full flex items-center justify-center"><Wrench size={28} className="text-slate-700" /></div>}
+                          <div className="absolute top-3 left-3">
+                            <span className="text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full text-white" style={{ backgroundColor: svc.color }}>{svc.sub || "Service"}</span>
+                          </div>
+                          <div className="absolute top-3 right-3 flex gap-1.5">
+                            <button onClick={() => { setCurrentSvc(svc); setSvcModal(true); }} className="p-1.5 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors"><Edit2 size={11} /></button>
+                            <button onClick={() => deleteService(svc.id)} className="p-1.5 rounded-lg bg-red-500/50 hover:bg-red-500/70 text-white transition-colors"><Trash2 size={11} /></button>
+                          </div>
+                          {!svc.visible && (
+                            <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                              <EyeOff size={9} className="text-slate-400" />
+                              <span className="text-[8px] text-slate-400 font-medium">Hidden</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h3 className="text-sm font-semibold text-white mb-1">{svc.title}</h3>
+                          <p className="text-[11px] text-slate-500 line-clamp-2 mb-2">{svc.description}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {(svc.benefits || []).slice(0, 3).map((b, i) => (
+                              <span key={i} className="text-[8px] bg-white/5 text-slate-400 px-1.5 py-0.5 rounded">{b}</span>
+                            ))}
+                            {(svc.benefits || []).length > 3 && <span className="text-[8px] text-slate-600">+{svc.benefits.length - 3}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {svcItems.length === 0 && (
+                      <div className={`${card} ${cardPad} col-span-2 text-center py-12`}>
+                        <Wrench size={28} className="mx-auto mb-3 text-slate-600" />
+                        <p className="text-slate-500 text-sm">No service cards yet.</p>
+                        <p className="text-[10px] text-slate-600 mt-1">Add cards here and they&apos;ll appear on the live services page.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
               </>
             )}
 
@@ -1886,6 +2005,90 @@ export default function AdminPortal() {
                     <button onClick={() => setConfirmDeleteLead(selectedLead.id)} className={btnDanger}><Trash2 size={13} />Delete</button>
                   </div>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── SERVICE MODAL ──────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {svcModal && currentSvc && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.15 }} className="w-full max-w-lg bg-[#0D1117] border border-white/[0.08] rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+                <h2 className="text-sm font-semibold text-white">{currentSvc.id === 0 ? "Add service" : "Edit service"}</h2>
+                <button onClick={() => setSvcModal(false)} className="p-1.5 rounded-lg hover:bg-white/5 text-slate-500 transition-colors"><X size={15} /></button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="space-y-1.5">
+                  <label className={label}>Title</label>
+                  <input className={inputCls} placeholder="e.g. Copper Cabling" value={currentSvc.title} onChange={e => setCurrentSvc({ ...currentSvc, title: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className={label}>Subtitle / Category</label>
+                    <input className={inputCls} placeholder="e.g. Cat5e / Cat6" value={currentSvc.sub} onChange={e => setCurrentSvc({ ...currentSvc, sub: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className={label}>Badge colour</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={currentSvc.color} onChange={e => setCurrentSvc({ ...currentSvc, color: e.target.value })} className="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer" />
+                      <input className={inputCls} value={currentSvc.color} onChange={e => setCurrentSvc({ ...currentSvc, color: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={label}>Description</label>
+                  <textarea className={`${inputCls} min-h-[100px] resize-none`} placeholder="Describe this service..." value={currentSvc.description} onChange={e => setCurrentSvc({ ...currentSvc, description: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className={label}>Benefits (one per line)</label>
+                  <textarea className={`${inputCls} min-h-[100px] resize-none`} placeholder={"FLUKE DSX tested & certified\nPatch panel termination\nFull handover documentation"} value={(currentSvc.benefits || []).join("\n")} onChange={e => setCurrentSvc({ ...currentSvc, benefits: e.target.value.split("\n").filter(b => b.trim()) })} />
+                  <p className="text-[9px] text-slate-600">Each line becomes a bullet point on the service card.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={label}>Card Image</label>
+                  <button 
+                    onClick={() => { setMediaPickerTarget(`svc-img-${currentSvc.id}`); setMediaPickerOpen(true); }}
+                    className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-[#161B22] border-2 border-dashed border-white/10 rounded-xl hover:border-[#0072CE]/50 hover:bg-[#0072CE]/5 transition-all group"
+                  >
+                    <FolderOpen size={18} className="text-slate-500 group-hover:text-[#0072CE]" />
+                    <span className="text-sm text-slate-400 group-hover:text-white font-medium">
+                      {currentSvc.image ? 'Change image' : 'Select from Media Library'}
+                    </span>
+                  </button>
+                  {currentSvc.image && (
+                    <div className="relative w-full h-32 rounded-xl overflow-hidden bg-[#161B22] border border-white/[0.06]">
+                      <Image src={currentSvc.image} alt="Preview" fill className="object-cover" unoptimized />
+                      <button 
+                        onClick={() => setCurrentSvc({ ...currentSvc, image: "" })}
+                        className="absolute top-2 right-2 p-1 rounded-md bg-black/60 hover:bg-red-500/80 text-white transition-colors"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className={label}>Sort order</label>
+                    <input className={inputCls} type="number" min={0} value={currentSvc.sort_order} onChange={e => setCurrentSvc({ ...currentSvc, sort_order: parseInt(e.target.value) || 0 })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className={label}>Visibility</label>
+                    <button onClick={() => setCurrentSvc({ ...currentSvc, visible: !currentSvc.visible })} className={`${inputCls} flex items-center justify-between cursor-pointer`}>
+                      <span>{currentSvc.visible ? "Visible on site" : "Hidden"}</span>
+                      {currentSvc.visible ? <Eye size={14} className="text-emerald-400" /> : <EyeOff size={14} className="text-slate-500" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-white/[0.06] flex justify-end gap-2.5">
+                <button onClick={() => setSvcModal(false)} className={btnGhost}>Cancel</button>
+                <button onClick={saveService} disabled={svcSaving} className={btnPrimary}>
+                  {svcSaving ? <><RefreshCw size={13} className="animate-spin" />Saving...</> : <><Save size={13} />Save</>}
+                </button>
               </div>
             </motion.div>
           </div>
