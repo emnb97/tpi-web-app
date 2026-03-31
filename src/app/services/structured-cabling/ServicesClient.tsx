@@ -38,6 +38,36 @@ export default function ServicesClient() {
         const mapping = cmsData.reduce((acc: any, curr: any) => ({ ...acc, [curr.id]: curr.content }), {});
         setCms(mapping);
         setServices((servicesData as Service[]).filter(s => s.visible !== false));
+        
+        // Fallback: if no services in database, use defaults
+        if (!servicesData || (servicesData as Service[]).length === 0) {
+          setServices([
+            {
+              id: 1, title: "Copper Cabling", sub: "Cat5e / Cat6 / Cat6a",
+              description: "Full copper structured cabling installations for commercial offices, data centres, and residential developments. From containment and first fix through to termination, testing, and handover.",
+              benefits: ["Cat5e, Cat6, and Cat6a installations", "Patch panel termination & labelling", "FLUKE DSX tested & certified", "Floor boxes, faceplates & outlets"],
+              image: "/image1.png", color: "#0072CE", sort_order: 1, visible: true,
+            },
+            {
+              id: 2, title: "Fibre Optic", sub: "Single-mode / Multi-mode",
+              description: "End-to-end fibre optic infrastructure including backbone cabling, fusion splicing, OTDR testing, and full certification.",
+              benefits: ["Single-mode & multi-mode fibre", "Fusion splicing & mechanical splicing", "OTDR testing with full reports", "LC, SC, and MPO connectivity"],
+              image: "/image2.png", color: "#00A651", sort_order: 2, visible: true,
+            },
+            {
+              id: 3, title: "Containment", sub: "Trunking / Basket / Conduit",
+              description: "Professional cable containment systems including basket tray, ladder rack, trunking, and conduit installation.",
+              benefits: ["Cable basket & ladder rack", "PVC & steel trunking", "Conduit & flexible systems", "Fire stopping & labelling"],
+              image: "/image3.png", color: "#002D72", sort_order: 3, visible: true,
+            },
+            {
+              id: 4, title: "Network Infrastructure", sub: "Comms rooms / Cabinets",
+              description: "Complete comms room fit-outs, cabinet installations, and network infrastructure builds.",
+              benefits: ["Server cabinet & rack installation", "PDU & power distribution", "Cable management & dressing", "Full commissioning & handover"],
+              image: "/image4.png", color: "#F59E0B", sort_order: 4, visible: true,
+            },
+          ]);
+        }
       } catch (error) {
         console.error('Failed to load data:', error);
       } finally {
